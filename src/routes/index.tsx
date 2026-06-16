@@ -1,8 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useChat } from "@ai-sdk/react";
-import { DefaultChatTransport, type UIMessage } from "ai";
 import { useEffect, useRef, useState } from "react";
-import ReactMarkdown from "react-markdown";
 import heroBg from "@/assets/hero-bg.jpg";
 import lunaAvatar from "@/assets/luna-avatar.jpg";
 
@@ -19,50 +16,103 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
-  const WHATSAPP_URL = "https://wa.me/56900000000?text=Hola%20Luna,%20quiero%20agendar%20mi%20evaluación.";
-  const initialMessages: UIMessage[] = [
+  const WHATSAPP_NUMBER = "56900000000";
+
+  type Step = {
+    id: string;
+    question: string;
+    options: string[];
+  };
+
+  const STEPS: Step[] = [
     {
-      id: "welcome",
-      role: "assistant",
-      parts: [
-        {
-          type: "text",
-          text: "Hola, soy **Luna** de ANESPRO 🩺 Estoy aquí para orientarte y agendar tu evaluación online. ¿Para qué patología necesitas evaluación: **hernia, vesícula o catarata**?",
-        },
-      ],
+      id: "patologia",
+      question: "Hola, soy Luna de ANESPRO 🩺 ¿Para qué patología necesitas evaluación?",
+      options: ["Hernia", "Vesícula", "Catarata", "Aún no lo sé"],
+    },
+    {
+      id: "examen",
+      question: "¿Tienes algún examen de imagen? (ecografía, TAC o informe médico)",
+      options: ["Sí, tengo examen", "No tengo aún", "No estoy seguro/a"],
+    },
+    {
+      id: "prevision",
+      question: "¿Cuál es tu previsión de salud?",
+      options: ["FONASA", "ISAPRE", "Particular"],
+    },
+    {
+      id: "region",
+      question: "¿Desde qué región nos escribes?",
+      options: ["Metropolitana", "Valparaíso", "Biobío", "Otra región"],
+    },
+    {
+      id: "horario",
+      question: "Excelente 🎯 ¿En qué horario prefieres tu videollamada de evaluación?",
+      options: ["Mañana (09–12h)", "Tarde (12–18h)", "Tarde-noche (18–21h)"],
     },
   ];
 
-  const { messages, sendMessage, status } = useChat({
-    transport: new DefaultChatTransport({ api: "/api/chat" }),
-    messages: initialMessages,
-  });
-
-  const [input, setInput] = useState("");
+  type Msg = { id: string; role: "bot" | "user"; text: string };
+  const [messages, setMessages] = useState<Msg[]>([
+    { id: "q-0", role: "bot", text: STEPS[0].question },
+  ]);
+  const [stepIdx, setStepIdx] = useState(0);
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [typing, setTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const isLoading = status === "submitted" || status === "streaming";
+
+  const done = stepIdx >= STEPS.length;
+  const currentStep = !done ? STEPS[stepIdx] : null;
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages, status]);
+  }, [messages, typing]);
 
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
+  const handleChoose = (option: string) => {
+    if (!currentStep || typing) return;
+    const stepId = currentStep.id;
+    const nextIdx = stepIdx + 1;
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const text = input.trim();
-    if (!text || isLoading) return;
-    sendMessage({ text });
-    setInput("");
-    setTimeout(() => inputRef.current?.focus(), 0);
+    setMessages((m) => [...m, { id: `a-${stepId}`, role: "user", text: option }]);
+    setAnswers((a) => ({ ...a, [stepId]: option }));
+    setTyping(true);
+
+    setTimeout(() => {
+      setTyping(false);
+      if (nextIdx < STEPS.length) {
+        setMessages((m) => [...m, { id: `q-${nextIdx}`, role: "bot", text: STEPS[nextIdx].question }]);
+        setStepIdx(nextIdx);
+      } else {
+        setMessages((m) => [
+          ...m,
+          {
+            id: "final",
+            role: "bot",
+            text: "¡Listo! ✅ Tengo todo lo necesario. Continuemos por WhatsApp para confirmar el horario exacto con un coordinador humano.",
+          },
+        ]);
+        setStepIdx(nextIdx);
+      }
+    }, 700);
   };
+
+  const handleRestart = () => {
+    setMessages([{ id: "q-0", role: "bot", text: STEPS[0].question }]);
+    setAnswers({});
+    setStepIdx(0);
+  };
+
+  const summary = `Hola Luna, quiero agendar mi evaluación.%0A%0A` +
+    `• Patología: ${answers.patologia ?? "-"}%0A` +
+    `• Examen: ${answers.examen ?? "-"}%0A` +
+    `• Previsión: ${answers.prevision ?? "-"}%0A` +
+    `• Región: ${answers.region ?? "-"}%0A` +
+    `• Horario: ${answers.horario ?? "-"}`;
+  const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${summary}`;
+  const whatsappFallback = `https://wa.me/${WHATSAPP_NUMBER}?text=Hola%20Luna,%20quiero%20agendar%20mi%20evaluación.`;
 
   const scrollToChat = () => {
     document.getElementById("luna-chat")?.scrollIntoView({ behavior: "smooth", block: "center" });
-    setTimeout(() => inputRef.current?.focus(), 400);
   };
 
   return (
@@ -132,10 +182,10 @@ function Index() {
       <section id="luna-chat" className="relative z-10 mx-auto max-w-2xl px-6 pb-16">
         <div className="mb-4 flex flex-wrap items-center justify-center gap-3 text-center">
           <span className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-card/40 px-3 py-1 text-[11px] font-semibold tracking-wider text-primary">
-            <span className="h-1.5 w-1.5 rounded-full bg-primary" /> LUNA IA · ANESPRO
+            <span className="h-1.5 w-1.5 rounded-full bg-primary" /> LUNA · ANESPRO
           </span>
           <span className="text-xs text-muted-foreground">
-            Cuéntale a <strong className="text-foreground">Luna</strong> tu caso. Ella te orienta y agenda tu evaluación.
+            Responde a <strong className="text-foreground">Luna</strong> y agenda tu evaluación en menos de un minuto.
           </span>
         </div>
 
@@ -159,27 +209,23 @@ function Index() {
 
           {/* Messages */}
           <div ref={scrollRef} className="max-h-[440px] min-h-[320px] space-y-4 overflow-y-auto px-5 py-5">
-            {messages.map((m) => {
-              const text = m.parts.map((p) => (p.type === "text" ? p.text : "")).join("");
-              if (m.role === "user") {
-                return (
-                  <div key={m.id} className="flex justify-end">
-                    <div className="max-w-[80%] rounded-2xl rounded-br-sm bg-[var(--bubble-user)] px-4 py-2.5 text-sm text-[var(--bubble-user-foreground)] shadow">
-                      {text}
-                    </div>
-                  </div>
-                );
-              }
-              return (
-                <div key={m.id} className="flex gap-2.5">
-                  <img src={lunaAvatar} alt="" width={32} height={32} className="h-8 w-8 flex-shrink-0 rounded-full object-cover" loading="lazy" />
-                  <div className="max-w-[80%] rounded-2xl rounded-bl-sm bg-[var(--bubble-bot)] px-4 py-2.5 text-sm leading-relaxed prose prose-sm prose-invert prose-p:my-1 prose-strong:text-primary">
-                    <ReactMarkdown>{text || "…"}</ReactMarkdown>
+            {messages.map((m) =>
+              m.role === "user" ? (
+                <div key={m.id} className="flex justify-end">
+                  <div className="max-w-[80%] rounded-2xl rounded-br-sm bg-[var(--bubble-user)] px-4 py-2.5 text-sm text-[var(--bubble-user-foreground)] shadow">
+                    {m.text}
                   </div>
                 </div>
-              );
-            })}
-            {status === "submitted" && (
+              ) : (
+                <div key={m.id} className="flex gap-2.5">
+                  <img src={lunaAvatar} alt="" width={32} height={32} className="h-8 w-8 flex-shrink-0 rounded-full object-cover" loading="lazy" />
+                  <div className="max-w-[80%] rounded-2xl rounded-bl-sm bg-[var(--bubble-bot)] px-4 py-2.5 text-sm leading-relaxed">
+                    {m.text}
+                  </div>
+                </div>
+              ),
+            )}
+            {typing && (
               <div className="flex gap-2.5">
                 <img src={lunaAvatar} alt="" width={32} height={32} className="h-8 w-8 rounded-full object-cover" loading="lazy" />
                 <div className="rounded-2xl rounded-bl-sm bg-[var(--bubble-bot)] px-4 py-3 text-sm">
@@ -193,32 +239,47 @@ function Index() {
             )}
           </div>
 
-          {/* Input */}
-          <form onSubmit={handleSubmit} className="flex items-center gap-2 border-t border-border px-3 py-3">
-            <input
-              ref={inputRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Escribe tu mensaje a Luna…"
-              className="flex-1 rounded-full bg-input px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/40"
-              disabled={isLoading}
-            />
-            <button
-              type="submit"
-              disabled={isLoading || !input.trim()}
-              aria-label="Enviar"
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground shadow transition hover:brightness-110 disabled:opacity-50"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M22 2 11 13" />
-                <path d="M22 2 15 22l-4-9-9-4 20-7Z" />
-              </svg>
-            </button>
-          </form>
+          {/* Choice bar */}
+          <div className="border-t border-border px-4 py-4">
+            {currentStep && !typing && (
+              <div className="flex flex-wrap justify-end gap-2">
+                {currentStep.options.map((opt) => (
+                  <button
+                    key={opt}
+                    onClick={() => handleChoose(opt)}
+                    className="rounded-full border border-primary/40 bg-primary/10 px-4 py-2 text-sm text-foreground transition hover:bg-primary hover:text-primary-foreground"
+                  >
+                    {opt}
+                  </button>
+                ))}
+              </div>
+            )}
+            {currentStep && typing && (
+              <p className="text-center text-xs text-muted-foreground">Luna está escribiendo…</p>
+            )}
+            {done && !typing && (
+              <div className="flex flex-col gap-2 sm:flex-row sm:justify-between">
+                <button
+                  onClick={handleRestart}
+                  className="rounded-full border border-border bg-card/60 px-4 py-2 text-sm text-muted-foreground transition hover:text-foreground"
+                >
+                  ↺ Empezar de nuevo
+                </button>
+                <a
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-[var(--online)] px-5 py-2.5 text-sm font-semibold text-[var(--bubble-user-foreground)] shadow-lg transition hover:brightness-110"
+                >
+                  Continuar por WhatsApp →
+                </a>
+              </div>
+            )}
+          </div>
         </div>
 
         <a
-          href={WHATSAPP_URL}
+          href={whatsappFallback}
           target="_blank"
           rel="noopener noreferrer"
           className="mt-4 flex items-center justify-center gap-2 rounded-2xl border border-border bg-card/40 px-4 py-3 text-sm text-muted-foreground backdrop-blur transition hover:bg-card/70 hover:text-foreground"
