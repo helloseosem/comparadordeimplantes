@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import LeadForm from "@/components/LeadForm";
+import TestimonialsSection from "@/components/TestimonialsSection";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -206,6 +207,9 @@ function Index() {
           </div>
         </div>
       </section>
+
+      {/* Testimonios */}
+      <TestimonialsSection />
 
       {/* Footer */}
       <footer className="relative z-10 border-t border-border bg-background/70">
