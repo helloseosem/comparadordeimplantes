@@ -74,6 +74,51 @@ export async function appendLeadRow(values: (string | number)[]): Promise<void> 
   }
 }
 
+type LeadCache = {
+  keys: Set<string>;
+  rowCount: number;
+  fetchedAt: number;
+};
+
+let leadCache: LeadCache | null = null;
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutos
+
+export function addLeadKeyToCache(key: string) {
+  if (leadCache) {
+    leadCache.keys.add(key);
+    leadCache.rowCount += 1;
+  }
+}
+
+export function invalidateLeadCache() {
+  leadCache = null;
+}
+
+/**
+ * Devuelve el set de claves normalizadas de leads existentes.
+ * Usa caché en memoria con TTL para evitar releer toda la hoja en cada save_lead.
+ */
+export async function getLeadKeySet(
+  buildKey: (nombre: string, patologia: string) => string,
+): Promise<Set<string>> {
+  const now = Date.now();
+  if (leadCache && now - leadCache.fetchedAt < CACHE_TTL_MS) {
+    return leadCache.keys;
+  }
+
+  const rows = await fetchLeadRows();
+  const keys = new Set<string>();
+  rows.forEach((r, idx) => {
+    if (idx === 0 && (r[1] ?? "").toLowerCase().includes("nombre")) return;
+    const nombre = r[1] ?? "";
+    const patologia = r[2] ?? "";
+    if (nombre && patologia) keys.add(buildKey(nombre, patologia));
+  });
+
+  leadCache = { keys, rowCount: rows.length, fetchedAt: now };
+  return keys;
+}
+
 export async function fetchLeadRows(): Promise<string[][]> {
   const lovableKey = process.env.LOVABLE_API_KEY;
   const sheetsKey = process.env.GOOGLE_SHEETS_API_KEY;
@@ -83,7 +128,9 @@ export async function fetchLeadRows(): Promise<string[][]> {
   if (!lovableKey) throw new Error("Missing LOVABLE_API_KEY");
   if (!sheetsKey) throw new Error("Missing GOOGLE_SHEETS_API_KEY");
 
-  const url = `https://connector-gateway.lovable.dev/google_sheets/v4/spreadsheets/${sheetId}/values/${tab}!A:J`;
+  // Solo leemos columnas B (nombre) y C (patología) — suficiente para la deduplicación
+  // y reduce drásticamente el payload vs leer A:J.
+  const url = `https://connector-gateway.lovable.dev/google_sheets/v4/spreadsheets/${sheetId}/values/${tab}!B:C`;
   const res = await fetch(url, {
     headers: {
       Authorization: `Bearer ${lovableKey}`,
@@ -95,5 +142,6 @@ export async function fetchLeadRows(): Promise<string[][]> {
     throw new Error(`Sheets read failed: ${res.status} ${body}`);
   }
   const data = (await res.json()) as { values?: string[][] };
-  return data.values ?? [];
+  // Normalizamos a [_, nombre, patologia] para mantener compatibilidad con los índices [1] y [2]
+  return (data.values ?? []).map((r) => ["", r[0] ?? "", r[1] ?? ""]);
 }
