@@ -80,9 +80,6 @@ function Index() {
 
       {/* Formulario inmersivo */}
       <section id="lead-form" className="relative z-10 mx-auto max-w-2xl px-6 pb-16">
-        <div className="mb-4 flex flex-wrap items-center justify-center gap-3 text-center">
-        </div>
-
         <LeadForm />
 
         <a
