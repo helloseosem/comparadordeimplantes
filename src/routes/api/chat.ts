@@ -73,8 +73,8 @@ const normalizePatologia = (raw: string) => {
 };
 
 const LeadSchema = z.object({
-  nombre: z.string().trim().transform(normalizeName).min(2, "Nombre demasiado corto"),
-  patologia: z.string().trim().transform(normalizePatologia).min(2),
+  nombre: z.string().trim().transform(normalizeName).refine((v) => v.length >= 2, { message: "Nombre demasiado corto" }),
+  patologia: z.string().trim().transform(normalizePatologia).refine((v) => v.length >= 2, { message: "Patología demasiado corta" }),
   examen: z.string().trim().min(1),
   prevision: z.string().trim().min(2),
   region: z.string().trim().min(2),
