@@ -12,9 +12,6 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
-// Measurement ID de GA4
-export const GA_MEASUREMENT_ID = "G-JMKHGZ6N79";
-
 function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -81,13 +78,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
+      { name: "description", content: "A guided chatbot for sales and data collection, offering predefined question flows." },
       { name: "author", content: "Lovable" },
       { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { property: "og:description", content: "A guided chatbot for sales and data collection, offering predefined question flows." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "Lovable App" },
+      { name: "twitter:description", content: "A guided chatbot for sales and data collection, offering predefined question flows." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/3e72e64c-e21d-4d7d-8151-2ab51b4ac0dc/id-preview-4b6e5db5--7acac390-85c9-4133-834b-131e933ba30c.lovable.app-1781792008703.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/3e72e64c-e21d-4d7d-8151-2ab51b4ac0dc/id-preview-4b6e5db5--7acac390-85c9-4133-834b-131e933ba30c.lovable.app-1781792008703.png" },
     ],
     links: [
       {
@@ -95,17 +96,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: appCss,
       },
     ],
-    scripts: (GA_MEASUREMENT_ID as string).startsWith("G-") && (GA_MEASUREMENT_ID as string) !== "G-XXXXXXXXXX"
-      ? [
-          {
-            src: `https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`,
-            async: true,
-          },
-          {
-            children: `window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', '${GA_MEASUREMENT_ID}');`,
-          },
-        ]
-      : [],
   }),
   shellComponent: RootShell,
   component: RootComponent,
