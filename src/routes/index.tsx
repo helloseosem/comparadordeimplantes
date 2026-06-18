@@ -1,5 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
+import { useChat } from "@ai-sdk/react";
+import { DefaultChatTransport, type UIMessage } from "ai";
+import ReactMarkdown from "react-markdown";
 import heroBg from "@/assets/hero-bg.jpg";
 import lunaAvatar from "@/assets/luna-avatar.jpg";
 
@@ -18,98 +21,50 @@ export const Route = createFileRoute("/")({
 function Index() {
   const WHATSAPP_NUMBER = "56900000000";
 
-  type Step = {
-    id: string;
-    question: string;
-    options: string[];
-  };
-
-  const STEPS: Step[] = [
+  const initialMessages: UIMessage[] = [
     {
-      id: "patologia",
-      question: "Hola, soy Luna de ANESPRO 🩺 ¿Para qué patología necesitas evaluación?",
-      options: ["Hernia", "Vesícula", "Catarata", "Aún no lo sé"],
-    },
-    {
-      id: "examen",
-      question: "¿Tienes algún examen de imagen? (ecografía, TAC o informe médico)",
-      options: ["Sí, tengo examen", "No tengo aún", "No estoy seguro/a"],
-    },
-    {
-      id: "prevision",
-      question: "¿Cuál es tu previsión de salud?",
-      options: ["FONASA", "ISAPRE", "Particular"],
-    },
-    {
-      id: "region",
-      question: "¿Desde qué región nos escribes?",
-      options: ["Metropolitana", "Valparaíso", "Biobío", "Otra región"],
-    },
-    {
-      id: "horario",
-      question: "Excelente 🎯 ¿En qué horario prefieres tu videollamada de evaluación?",
-      options: ["Mañana (09–12h)", "Tarde (12–18h)", "Tarde-noche (18–21h)"],
+      id: "welcome",
+      role: "assistant",
+      parts: [
+        {
+          type: "text",
+          text: "Hola 👋 Soy **Luna** de ANESPRO. Te ayudo a coordinar tu evaluación quirúrgica online en menos de un minuto. ¿Cuál es tu nombre y apellido?",
+        },
+      ],
     },
   ];
 
-  type Msg = { id: string; role: "bot" | "user"; text: string };
-  const [messages, setMessages] = useState<Msg[]>([
-    { id: "q-0", role: "bot", text: STEPS[0].question },
-  ]);
-  const [stepIdx, setStepIdx] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [typing, setTyping] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const transport = new DefaultChatTransport({ api: "/api/chat" });
+  const { messages, sendMessage, status, error } = useChat({
+    id: "luna-chat",
+    messages: initialMessages,
+    transport,
+  });
 
-  const done = stepIdx >= STEPS.length;
-  const currentStep = !done ? STEPS[stepIdx] : null;
+  const [input, setInput] = useState("");
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const isLoading = status === "submitted" || status === "streaming";
+  const leadSaved = messages.some((m) =>
+    m.parts.some(
+      (p) => p.type === "tool-save_lead" && (p as { state?: string }).state === "output-available",
+    ),
+  );
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages, typing]);
+  }, [messages, isLoading]);
 
-  const handleChoose = (option: string) => {
-    if (!currentStep || typing) return;
-    const stepId = currentStep.id;
-    const nextIdx = stepIdx + 1;
-
-    setMessages((m) => [...m, { id: `a-${stepId}`, role: "user", text: option }]);
-    setAnswers((a) => ({ ...a, [stepId]: option }));
-    setTyping(true);
-
-    setTimeout(() => {
-      setTyping(false);
-      if (nextIdx < STEPS.length) {
-        setMessages((m) => [...m, { id: `q-${nextIdx}`, role: "bot", text: STEPS[nextIdx].question }]);
-        setStepIdx(nextIdx);
-      } else {
-        setMessages((m) => [
-          ...m,
-          {
-            id: "final",
-            role: "bot",
-            text: "¡Listo! ✅ Tengo todo lo necesario. Continuemos por WhatsApp para confirmar el horario exacto con un coordinador humano.",
-          },
-        ]);
-        setStepIdx(nextIdx);
-      }
-    }, 700);
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const text = input.trim();
+    if (!text || isLoading) return;
+    setInput("");
+    void sendMessage({ text });
+    setTimeout(() => inputRef.current?.focus(), 50);
   };
 
-  const handleRestart = () => {
-    setMessages([{ id: "q-0", role: "bot", text: STEPS[0].question }]);
-    setAnswers({});
-    setStepIdx(0);
-  };
-
-  const summary = `Hola Luna, quiero agendar mi evaluación.%0A%0A` +
-    `• Patología: ${answers.patologia ?? "-"}%0A` +
-    `• Examen: ${answers.examen ?? "-"}%0A` +
-    `• Previsión: ${answers.prevision ?? "-"}%0A` +
-    `• Región: ${answers.region ?? "-"}%0A` +
-    `• Horario: ${answers.horario ?? "-"}`;
-  const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${summary}`;
-  const whatsappFallback = `https://wa.me/${WHATSAPP_NUMBER}?text=Hola%20Luna,%20quiero%20agendar%20mi%20evaluación.`;
+  const whatsappFallback = `https://wa.me/${WHATSAPP_NUMBER}?text=Hola%20Luna,%20quiero%20agendar%20mi%20evaluaci%C3%B3n.`;
 
   const scrollToChat = () => {
     document.getElementById("luna-chat")?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -185,7 +140,7 @@ function Index() {
             <span className="h-1.5 w-1.5 rounded-full bg-primary" /> LUNA · ANESPRO
           </span>
           <span className="text-xs text-muted-foreground">
-            Responde a <strong className="text-foreground">Luna</strong> y agenda tu evaluación en menos de un minuto.
+            Cuéntale a <strong className="text-foreground">Luna</strong> tu caso y ella coordinará tu evaluación.
           </span>
         </div>
 
@@ -209,23 +164,45 @@ function Index() {
 
           {/* Messages */}
           <div ref={scrollRef} className="max-h-[440px] min-h-[320px] space-y-4 overflow-y-auto px-5 py-5">
-            {messages.map((m) =>
-              m.role === "user" ? (
-                <div key={m.id} className="flex justify-end">
-                  <div className="max-w-[80%] rounded-2xl rounded-br-sm bg-[var(--bubble-user)] px-4 py-2.5 text-sm text-[var(--bubble-user-foreground)] shadow">
-                    {m.text}
+            {messages.map((m) => {
+              const text = m.parts
+                .map((p) => (p.type === "text" ? p.text : ""))
+                .join("")
+                .trim();
+              const savedHere = m.parts.some(
+                (p) =>
+                  p.type === "tool-save_lead" &&
+                  (p as { state?: string }).state === "output-available",
+              );
+              if (!text && !savedHere) return null;
+              if (m.role === "user") {
+                return (
+                  <div key={m.id} className="flex justify-end">
+                    <div className="max-w-[80%] rounded-2xl rounded-br-sm bg-[var(--bubble-user)] px-4 py-2.5 text-sm text-[var(--bubble-user-foreground)] shadow">
+                      {text}
+                    </div>
                   </div>
-                </div>
-              ) : (
+                );
+              }
+              return (
                 <div key={m.id} className="flex gap-2.5">
                   <img src={lunaAvatar} alt="" width={32} height={32} className="h-8 w-8 flex-shrink-0 rounded-full object-cover" loading="lazy" />
-                  <div className="max-w-[80%] rounded-2xl rounded-bl-sm bg-[var(--bubble-bot)] px-4 py-2.5 text-sm leading-relaxed">
-                    {m.text}
+                  <div className="flex max-w-[80%] flex-col gap-2">
+                    {text && (
+                      <div className="rounded-2xl rounded-bl-sm bg-[var(--bubble-bot)] px-4 py-2.5 text-sm leading-relaxed prose prose-sm prose-invert max-w-none [&_p]:my-1">
+                        <ReactMarkdown>{text}</ReactMarkdown>
+                      </div>
+                    )}
+                    {savedHere && (
+                      <div className="inline-flex items-center gap-1.5 self-start rounded-full bg-[var(--online)]/15 px-3 py-1 text-[11px] text-[var(--online)]">
+                        <span>✓</span> Datos guardados en el CRM
+                      </div>
+                    )}
                   </div>
                 </div>
-              ),
-            )}
-            {typing && (
+              );
+            })}
+            {isLoading && (
               <div className="flex gap-2.5">
                 <img src={lunaAvatar} alt="" width={32} height={32} className="h-8 w-8 rounded-full object-cover" loading="lazy" />
                 <div className="rounded-2xl rounded-bl-sm bg-[var(--bubble-bot)] px-4 py-3 text-sm">
@@ -237,45 +214,35 @@ function Index() {
                 </div>
               </div>
             )}
+            {error && (
+              <div className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+                Ocurrió un error contactando a Luna. Reintenta en unos segundos.
+              </div>
+            )}
           </div>
 
-          {/* Choice bar */}
-          <div className="border-t border-border px-4 py-4">
-            {currentStep && !typing && (
-              <div className="flex flex-wrap justify-end gap-2">
-                {currentStep.options.map((opt) => (
-                  <button
-                    key={opt}
-                    onClick={() => handleChoose(opt)}
-                    className="rounded-full border border-primary/40 bg-primary/10 px-4 py-2 text-sm text-foreground transition hover:bg-primary hover:text-primary-foreground"
-                  >
-                    {opt}
-                  </button>
-                ))}
-              </div>
-            )}
-            {currentStep && typing && (
-              <p className="text-center text-xs text-muted-foreground">Luna está escribiendo…</p>
-            )}
-            {done && !typing && (
-              <div className="flex flex-col gap-2 sm:flex-row sm:justify-between">
-                <button
-                  onClick={handleRestart}
-                  className="rounded-full border border-border bg-card/60 px-4 py-2 text-sm text-muted-foreground transition hover:text-foreground"
-                >
-                  ↺ Empezar de nuevo
-                </button>
-                <a
-                  href={whatsappUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center gap-2 rounded-full bg-[var(--online)] px-5 py-2.5 text-sm font-semibold text-[var(--bubble-user-foreground)] shadow-lg transition hover:brightness-110"
-                >
-                  Continuar por WhatsApp →
-                </a>
-              </div>
-            )}
-          </div>
+          {/* Composer */}
+          <form onSubmit={handleSubmit} className="flex items-center gap-2 border-t border-border px-4 py-3">
+            <input
+              ref={inputRef}
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder={leadSaved ? "¡Listo! Puedes seguir conversando…" : "Escribe tu respuesta a Luna…"}
+              disabled={isLoading}
+              autoComplete="off"
+              maxLength={500}
+              className="flex-1 rounded-full border border-border bg-input/40 px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary/60 focus:outline-none disabled:opacity-60"
+            />
+            <button
+              type="submit"
+              disabled={isLoading || !input.trim()}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/20 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+              aria-label="Enviar"
+            >
+              ↑
+            </button>
+          </form>
         </div>
 
         <a
