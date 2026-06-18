@@ -48,9 +48,33 @@ const normalizePhone = (raw: string) => {
   return raw.trim();
 };
 
+const normalizeName = (raw: string) => {
+  const cleaned = raw
+    .trim()
+    .replace(/\s+/g, " ")
+    .replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s-]/g, "")
+    .replace(/\s+/g, " ");
+  return cleaned
+    .split(" ")
+    .map((w) => (w ? w[0].toUpperCase() + w.slice(1).toLowerCase() : ""))
+    .join(" ");
+};
+
+const normalizePatologia = (raw: string) => {
+  const cleaned = raw
+    .trim()
+    .replace(/\s+/g, " ")
+    .replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s-/()]/g, "")
+    .replace(/\s+/g, " ");
+  return cleaned
+    .split(" ")
+    .map((w) => (w ? w[0].toUpperCase() + w.slice(1).toLowerCase() : ""))
+    .join(" ");
+};
+
 const LeadSchema = z.object({
-  nombre: z.string().trim().min(2, "Nombre demasiado corto"),
-  patologia: z.string().trim().min(2),
+  nombre: z.string().trim().transform(normalizeName).refine((v) => v.length >= 2, { message: "Nombre demasiado corto" }),
+  patologia: z.string().trim().transform(normalizePatologia).refine((v) => v.length >= 2, { message: "Patología demasiado corta" }),
   examen: z.string().trim().min(1),
   prevision: z.string().trim().min(2),
   region: z.string().trim().min(2),
