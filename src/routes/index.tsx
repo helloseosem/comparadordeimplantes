@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import LeadForm from "@/components/LeadForm";
+import TestimonialsSection from "@/components/TestimonialsSection";
 
 export const Route = createFileRoute("/")({
   head: () => ({
