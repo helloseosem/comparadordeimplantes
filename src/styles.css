@@ -85,6 +85,9 @@
   --ring: oklch(0.74 0.13 195);
   --cta: oklch(0.78 0.16 60);
   --cta-foreground: oklch(1 0 0);
+  --brand-navy: oklch(0.22 0.16 275);
+  --brand-navy-foreground: oklch(1 0 0);
+  --section-mint: oklch(0.97 0.03 195);
   --bubble-user: oklch(0.74 0.13 195);
   --bubble-user-foreground: oklch(1 0 0);
   --bubble-bot: oklch(0.96 0.015 200);
