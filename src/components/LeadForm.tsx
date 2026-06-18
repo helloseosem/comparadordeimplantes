@@ -138,6 +138,9 @@ export default function LeadForm() {
   const step = STEPS[stepIndex];
   const days = useMemo(() => buildNextDays(3), []);
   const [citaDay, setCitaDay] = useState<string | null>(null);
+  const [citaTime, setCitaTime] = useState<string | null>(null);
+
+  const WHATSAPP_NUMBER = "34600000000";
 
   const progress = (stepIndex / STEPS.length) * 100;
 
@@ -145,17 +148,18 @@ export default function LeadForm() {
     setTextValue("");
     setError(null);
     setCitaDay(null);
+    setCitaTime(null);
     if (step?.kind === "text") {
       setTimeout(() => inputRef.current?.focus(), 250);
     }
   }, [stepIndex, step?.kind]);
 
-  const advance = (key: StepKey, value: string) => {
+  const advance = (key: StepKey, value: string, autoSubmit = true) => {
     setLeaving(true);
     setTimeout(() => {
       setAnswers((prev) => ({ ...prev, [key]: value }));
       if (stepIndex + 1 >= STEPS.length) {
-        void submit({ ...answers, [key]: value });
+        if (autoSubmit) void submit({ ...answers, [key]: value });
       } else {
         setStepIndex((i) => i + 1);
       }
@@ -163,7 +167,7 @@ export default function LeadForm() {
     }, 280);
   };
 
-  const submit = async (data: Record<string, string>) => {
+  const submit = async (data: Record<string, string>, viaWhatsApp = false) => {
     setSubmitting(true);
     setServerError(null);
     try {
@@ -178,11 +182,19 @@ export default function LeadForm() {
         setSubmitting(false);
         return;
       }
-      // Limpia estado tras envío exitoso y redirige
+      if (viaWhatsApp) {
+        const msg =
+          `Hola, acabo de rellenar el formulario.%0A` +
+          `Nombre: ${encodeURIComponent(data.nombre ?? "")}%0A` +
+          `Teléfono: ${encodeURIComponent(data.telefono ?? "")}%0A` +
+          `Cita preferida: ${encodeURIComponent(data.cita ?? "")}`;
+        window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`, "_blank");
+      }
       setAnswers({});
       setTextValue("");
       setStepIndex(0);
       setCitaDay(null);
+      setCitaTime(null);
       void navigate({ to: "/thank-you" });
     } catch {
       setServerError("Error de conexión. Revisa tu internet y reintenta.");
@@ -203,10 +215,17 @@ export default function LeadForm() {
     advance(step.key, v);
   };
 
-  const handleCitaPick = (day: string, time: string) => {
-    const found = days.find((d) => d.iso === day);
-    const label = found ? `${found.label} · ${time}` : `${day} ${time}`;
-    advance("cita", label);
+  const buildCitaLabel = () => {
+    if (!citaDay || !citaTime) return "";
+    const found = days.find((d) => d.iso === citaDay);
+    return found ? `${found.label} · ${citaTime}` : `${citaDay} ${citaTime}`;
+  };
+
+  const handleFinalSubmit = (viaWhatsApp: boolean) => {
+    const label = buildCitaLabel();
+    if (!label) return;
+    const data = { ...answers, cita: label };
+    void submit(data, viaWhatsApp);
   };
 
   return (
