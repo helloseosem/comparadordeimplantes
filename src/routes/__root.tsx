@@ -12,8 +12,8 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
-// 👉 Reemplaza con tu Measurement ID real de GA4 (formato G-XXXXXXXXXX)
-export const GA_MEASUREMENT_ID = "G-XXXXXXXXXX";
+// Measurement ID de GA4
+export const GA_MEASUREMENT_ID = "G-JMKHGZ6N79";
 
 function NotFoundComponent() {
   return (
