@@ -121,7 +121,7 @@ function Index() {
                     <span className="text-2xl font-bold text-primary">1'</span>
                   </div>
                 ),
-                text: "Dedica 1 minuto de tu tiempo a hablar con Sofía y contarnos tu caso.",
+                text: "Dedica 1 minuto de tu tiempo a rellenar el formulario y contarnos tu caso.",
               },
               {
                 icon: (
@@ -154,6 +154,53 @@ function Index() {
                 <p className="max-w-xs text-sm leading-relaxed text-primary/80 sm:text-base">
                   {step.text}
                 </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Clínicas especialistas — sección oscura */}
+      <section className="relative z-10 bg-[#1f2326] py-20 text-white">
+        <div className="mx-auto max-w-6xl px-6 text-center">
+          <p className="text-2xl font-light leading-snug sm:text-4xl">
+            Trabajamos con{" "}
+            <span className="font-semibold underline decoration-2 underline-offset-[6px]">
+              clínicas especialistas
+            </span>
+          </p>
+          <p className="mt-3 text-lg font-light text-white/80 sm:text-2xl">
+            en implantología dental que te ofrecen:
+          </p>
+
+          <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              {
+                bg: "bg-[var(--brand-navy)]",
+                fg: "text-white",
+                text: "Profesionales altamente cualificados en implantología",
+              },
+              {
+                bg: "bg-[var(--accent)]",
+                fg: "text-[var(--brand-navy)]",
+                text: "Especializados en casos difíciles y derivaciones",
+              },
+              {
+                bg: "bg-white",
+                fg: "text-[var(--brand-navy)]",
+                text: "Clínicas Premium a precio justo",
+              },
+              {
+                bg: "bg-[var(--section-mint)]",
+                fg: "text-[var(--brand-navy)]",
+                text: "Tecnología e instalaciones con los mayores avances del sector",
+              },
+            ].map((c, i) => (
+              <div
+                key={i}
+                className={`flex min-h-[140px] items-center justify-center rounded-2xl px-6 py-7 text-center text-base font-semibold leading-snug shadow-lg sm:text-lg ${c.bg} ${c.fg}`}
+              >
+                {c.text}
               </div>
             ))}
           </div>
