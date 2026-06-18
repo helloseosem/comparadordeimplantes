@@ -1,7 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { convertToModelMessages, stepCountIs, streamText, tool, type UIMessage } from "ai";
 import { z } from "zod";
-import { appendLeadRow, createLovableAiGatewayProvider, fetchLeadRows } from "@/lib/ai-gateway.server";
+import {
+  addLeadKeyToCache,
+  appendLeadRow,
+  createLovableAiGatewayProvider,
+  getLeadKeySet,
+} from "@/lib/ai-gateway.server";
 
 const SYSTEM_PROMPT = `Eres Luna, coordinadora virtual de ANESPRO (Chile). Tu objetivo es ayudar a la persona a agendar una evaluación quirúrgica online y recolectar sus datos de forma cálida, breve y profesional.
 
@@ -161,21 +166,10 @@ export const Route = createFileRoute("/api/chat")({
             const ts = new Date().toLocaleString("es-CL", { timeZone: "America/Santiago" });
             try {
               // Deduplicación: evita guardar el mismo lead (mismo nombre+patología normalizados)
+              const targetKey = dedupKey(input.nombre, input.patologia);
               try {
-                const rows = await fetchLeadRows();
-                const targetKey = dedupKey(input.nombre, input.patologia);
-                // Saltar fila de cabecera si existe (col B = "nombre" / "Nombre")
-                const dataRows = rows.filter((r, idx) => {
-                  if (idx === 0 && (r[1] ?? "").toLowerCase().includes("nombre")) return false;
-                  return true;
-                });
-                const duplicate = dataRows.some((r) => {
-                  const nombre = r[1] ?? "";
-                  const patologia = r[2] ?? "";
-                  if (!nombre || !patologia) return false;
-                  return dedupKey(nombre, patologia) === targetKey;
-                });
-                if (duplicate) {
+                const existing = await getLeadKeySet(dedupKey);
+                if (existing.has(targetKey)) {
                   return {
                     ok: true,
                     duplicate: true,
@@ -199,6 +193,7 @@ export const Route = createFileRoute("/api/chat")({
                 input.email,
                 "landing-luna",
               ]);
+              addLeadKeyToCache(targetKey);
               return { ok: true, message: "Lead guardado en CRM." };
             } catch (err) {
               console.error("appendLeadRow error", err);
