@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 
 type StepKey =
   | "edad"
@@ -133,13 +134,13 @@ function buildNextDays(count: number) {
 }
 
 export default function LeadForm() {
+  const navigate = useNavigate();
   const [stepIndex, setStepIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [textValue, setTextValue] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [leaving, setLeaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -147,7 +148,7 @@ export default function LeadForm() {
   const days = useMemo(() => buildNextDays(3), []);
   const [citaDay, setCitaDay] = useState<string | null>(null);
 
-  const progress = ((stepIndex + (submitted ? 1 : 0)) / STEPS.length) * 100;
+  const progress = (stepIndex / STEPS.length) * 100;
 
   useEffect(() => {
     setTextValue("");
@@ -186,7 +187,12 @@ export default function LeadForm() {
         setSubmitting(false);
         return;
       }
-      setSubmitted(true);
+      // Limpia estado tras envío exitoso y redirige
+      setAnswers({});
+      setTextValue("");
+      setStepIndex(0);
+      setCitaDay(null);
+      void navigate({ to: "/thank-you" });
     } catch {
       setServerError("Error de conexión. Revisa tu internet y reintenta.");
     } finally {
@@ -211,22 +217,6 @@ export default function LeadForm() {
     const label = found ? `${found.label} · ${time}` : `${day} ${time}`;
     advance("cita", label);
   };
-
-  if (submitted) {
-    return (
-      <div className="rounded-3xl border border-border bg-card p-10 text-center shadow-2xl shadow-primary/10">
-        <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--online)]/15 text-2xl text-[var(--online)]">
-          ✓
-        </div>
-        <h3 className="text-2xl font-bold text-primary">¡Solicitud enviada!</h3>
-        <p className="mt-3 text-sm text-muted-foreground sm:text-base">
-          Gracias <strong className="text-foreground">{answers.nombre}</strong>. Un asesor te llamará al{" "}
-          <strong className="text-foreground">{answers.telefono}</strong> para tu cita del{" "}
-          <strong className="text-foreground">{answers.cita}</strong>.
-        </p>
-      </div>
-    );
-  }
 
   return (
     <div className="rounded-3xl border border-border bg-card p-6 shadow-2xl shadow-primary/10 sm:p-10">
