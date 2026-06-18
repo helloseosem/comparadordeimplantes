@@ -81,12 +81,6 @@ function Index() {
       {/* Formulario inmersivo */}
       <section id="lead-form" className="relative z-10 mx-auto max-w-2xl px-6 pb-16">
         <div className="mb-4 flex flex-wrap items-center justify-center gap-3 text-center">
-          <span className="inline-flex items-center gap-2 rounded-full border border-accent/40 bg-card px-3 py-1 text-[11px] font-semibold tracking-wider text-primary shadow-sm">
-            <span className="h-1.5 w-1.5 rounded-full bg-accent" /> VALORACIÓN GRATUITA · 1 MINUTO
-          </span>
-          <span className="text-xs text-muted-foreground">
-            Responde unas preguntas rápidas y elige tu cita.
-          </span>
         </div>
 
         <LeadForm />
