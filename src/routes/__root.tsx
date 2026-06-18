@@ -95,7 +95,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: appCss,
       },
     ],
-    scripts: GA_MEASUREMENT_ID.startsWith("G-") && GA_MEASUREMENT_ID !== "G-XXXXXXXXXX"
+    scripts: (GA_MEASUREMENT_ID as string).startsWith("G-") && (GA_MEASUREMENT_ID as string) !== "G-XXXXXXXXXX"
       ? [
           {
             src: `https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`,
