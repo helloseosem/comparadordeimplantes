@@ -73,3 +73,27 @@ export async function appendLeadRow(values: (string | number)[]): Promise<void> 
     throw new Error(`Sheets append failed: ${res.status} ${body}`);
   }
 }
+
+export async function fetchLeadRows(): Promise<string[][]> {
+  const lovableKey = process.env.LOVABLE_API_KEY;
+  const sheetsKey = process.env.GOOGLE_SHEETS_API_KEY;
+  const sheetId = process.env.LEADS_SHEET_ID ?? "1YbvY6Ppi1SGM8rCKTcc9XKGW3KvOxF2bYFIBADRivyY";
+  const tab = process.env.LEADS_SHEET_TAB ?? "Leads";
+
+  if (!lovableKey) throw new Error("Missing LOVABLE_API_KEY");
+  if (!sheetsKey) throw new Error("Missing GOOGLE_SHEETS_API_KEY");
+
+  const url = `https://connector-gateway.lovable.dev/google_sheets/v4/spreadsheets/${sheetId}/values/${tab}!A:J`;
+  const res = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${lovableKey}`,
+      "X-Connection-Api-Key": sheetsKey,
+    },
+  });
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`Sheets read failed: ${res.status} ${body}`);
+  }
+  const data = (await res.json()) as { values?: string[][] };
+  return data.values ?? [];
+}
