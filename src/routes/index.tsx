@@ -6,10 +6,10 @@ import logoComparador from "@/assets/logo-comparador.png.asset.json";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Comparador de Implantes Dentales en Valencia · Habla con Sofía" },
-      { name: "description", content: "Encuentra la mejor oferta de implantes dentales en tu clínica más cercana de la provincia de Valencia. Habla con Sofía y recibe una valoración personalizada gratuita." },
+      { title: "Comparador de Implantes Dentales en Valencia · Valoración Gratuita" },
+      { name: "description", content: "Encuentra la mejor oferta de implantes dentales en tu clínica más cercana de la provincia de Valencia. Recibe una valoración personalizada gratuita." },
       { property: "og:title", content: "Comparador de Implantes Dentales · Valencia" },
-      { property: "og:description", content: "Implantes dentales en la provincia de Valencia. Habla con Sofía y coordina una llamada con un especialista." },
+      { property: "og:description", content: "Implantes dentales en la provincia de Valencia. Coordina una llamada con un especialista y compara presupuestos." },
     ],
   }),
   component: Index,
@@ -59,7 +59,7 @@ function Index() {
           VALENCIA · CONSULTA GRATUITA · FINANCIACIÓN
         </div>
         <p className="mx-auto mt-6 max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base">
-          Habla con <span className="font-semibold text-foreground">Sofía</span>, nuestra asesora especializada. Valoramos tu caso y coordinamos una llamada con un especialista en una clínica colaboradora de la provincia de Valencia.
+          Valoramos tu caso y coordinamos una llamada con un especialista en una clínica colaboradora de la provincia de Valencia.
         </p>
         <button
           onClick={scrollToForm}
