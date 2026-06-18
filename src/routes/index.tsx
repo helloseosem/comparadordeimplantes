@@ -208,6 +208,9 @@ function Index() {
         </div>
       </section>
 
+      {/* Testimonios */}
+      <TestimonialsSection />
+
       {/* Footer */}
       <footer className="relative z-10 border-t border-border bg-background/70">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-6 py-5 text-xs text-muted-foreground sm:flex-row">
