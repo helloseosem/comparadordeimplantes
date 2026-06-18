@@ -124,6 +124,7 @@ const LeadSchema = z.object({
   dentadura_postiza: z.string().trim().transform(normalizeField).refine((v) => /^(Si|Sí|No)$/i.test(v), { message: "Indica Sí o No para dentadura postiza" }),
   num_implantes: z.string().trim().transform(normalizeField).refine((v) => v.length >= 1, { message: "Número de implantes requerido" }),
   presupuesto: z.string().trim().transform(normalizeField).refine((v) => v.length >= 2, { message: "Presupuesto requerido" }),
+  localidad: z.string().trim().transform(normalizeName).refine((v) => v.length >= 2, { message: "Localidad de Valencia requerida" }),
   telefono: z
     .string()
     .trim()
