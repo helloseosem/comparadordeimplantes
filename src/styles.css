@@ -63,30 +63,32 @@
 
 :root {
   --radius: 0.625rem;
-  /* ANESPRO-like dark medical theme */
-  --background: oklch(0.18 0.03 220);
-  --foreground: oklch(0.96 0.01 220);
-  --card: oklch(0.22 0.035 220 / 0.7);
-  --card-foreground: oklch(0.96 0.01 220);
-  --popover: oklch(0.2 0.03 220);
-  --popover-foreground: oklch(0.96 0.01 220);
-  --primary: oklch(0.78 0.14 210);
-  --primary-foreground: oklch(0.15 0.04 230);
-  --secondary: oklch(0.28 0.04 220);
-  --secondary-foreground: oklch(0.96 0.01 220);
-  --muted: oklch(0.26 0.03 220);
-  --muted-foreground: oklch(0.72 0.02 220);
-  --accent: oklch(0.78 0.14 210);
-  --accent-foreground: oklch(0.15 0.04 230);
+  /* Comparador Implantes — clean, hygienic dental theme */
+  --background: oklch(0.99 0.005 220);
+  --foreground: oklch(0.22 0.09 270);
+  --card: oklch(1 0 0 / 0.85);
+  --card-foreground: oklch(0.22 0.09 270);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.22 0.09 270);
+  --primary: oklch(0.22 0.09 270);
+  --primary-foreground: oklch(0.99 0.005 220);
+  --secondary: oklch(0.95 0.03 190);
+  --secondary-foreground: oklch(0.22 0.09 270);
+  --muted: oklch(0.96 0.01 220);
+  --muted-foreground: oklch(0.5 0.03 250);
+  --accent: oklch(0.74 0.13 195);
+  --accent-foreground: oklch(0.22 0.09 270);
   --destructive: oklch(0.62 0.22 25);
   --destructive-foreground: oklch(0.98 0 0);
-  --border: oklch(0.5 0.05 220 / 0.25);
-  --input: oklch(0.3 0.04 220 / 0.6);
-  --ring: oklch(0.78 0.14 210);
-  --bubble-user: oklch(0.74 0.14 210);
-  --bubble-user-foreground: oklch(0.18 0.05 230);
-  --bubble-bot: oklch(0.28 0.04 220 / 0.85);
-  --online: oklch(0.78 0.18 155);
+  --border: oklch(0.85 0.02 220);
+  --input: oklch(0.97 0.01 220);
+  --ring: oklch(0.74 0.13 195);
+  --cta: oklch(0.78 0.16 60);
+  --cta-foreground: oklch(1 0 0);
+  --bubble-user: oklch(0.74 0.13 195);
+  --bubble-user-foreground: oklch(1 0 0);
+  --bubble-bot: oklch(0.96 0.015 200);
+  --online: oklch(0.7 0.18 160);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
