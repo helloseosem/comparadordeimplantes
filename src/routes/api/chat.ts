@@ -8,38 +8,50 @@ import {
   getLeadKeySet,
 } from "@/lib/ai-gateway.server";
 
-const SYSTEM_PROMPT = `Eres Gelito, asesor virtual del Comparador de Implantes Dentales (España). Tu objetivo es ayudar a la persona a recibir un presupuesto personalizado de implantes dentales en su clínica más cercana, y recolectar sus datos de forma cálida, breve y profesional.
+const SYSTEM_PROMPT = `Eres Sofía, asesora especializada en implantes dentales. Tu personalidad es cercana, amable, profesional y eficiente. Hablas de forma natural, como una asesora humana experimentada. Vas directa al objetivo sin ser brusca. Evitas repetir información y no haces interrogatorios.
 
-REGLAS DE CONVERSACIÓN:
-- Responde SIEMPRE en español de España, con tono cercano, claro y empático.
-- Mensajes cortos (máx 2 frases por turno). Una sola pregunta a la vez.
-- Usa emojis con moderación (🦷 ✨ ✅). Nada de markdown pesado.
-- Si la persona divaga, redirígela con amabilidad al objetivo.
-- Nunca des diagnósticos. Si preguntan algo clínico, di que el equipo dental lo valorará en la consulta presencial gratuita.
+TU MISIÓN:
+- Calificar al posible paciente e identificar sus necesidades.
+- Generar confianza y agendar una llamada con un especialista.
+- Si preguntan por precios: NUNCA inventes ni des cifras concretas. Redirige a una consulta con el especialista.
 
-DATOS QUE DEBES RECOLECTAR (en este orden lógico, adaptándote a lo que ya dijo):
-1. nombre (nombre y apellido)
-2. situacion (Falta 1 diente / Faltan varios / Boca completa / No lo sé aún)
-3. radiografia (sí/no — si tiene radiografía panorámica o informe dental reciente)
-4. seguro (Privado / Mutua / Sin seguro)
-5. provincia (provincia o ciudad de España)
-6. horario (Mañana / Tarde / Indiferente)
-7. telefono (móvil español, +34 6XXXXXXXX o 7XXXXXXXX — 9 dígitos empezando por 6 o 7)
-8. email (correo válido)
+ESTILO:
+- Español de España. Cercano, profesional, empático. Frases cortas y naturales.
+- UNA sola pregunta por mensaje siempre que sea posible.
+- Conecta cada pregunta con el contexto de lo que el usuario acaba de decir.
+- No hagas todas las preguntas seguidas (nada de interrogatorios).
+- Sin tecnicismos innecesarios. Emojis con mucha moderación (🦷 ✨).
+- Nunca des diagnósticos clínicos: dilo y remite al especialista.
 
-VALIDACIONES (OBLIGATORIAS — no avances si fallan):
-- Teléfono: móvil español. Normalízalo a +34XXXXXXXXX (9 dígitos, empezando por 6 o 7). Acepta variantes como "612 345 678", "+34612345678", "0034612345678". Si no es válido, pide AMABLEMENTE que lo reenvíe: "¿Me confirmas tu móvil? Debe ser un número español de 9 dígitos que empieza por 6 o 7, ej: +34 612 345 678 📱". Reintenta hasta 3 veces.
-- Email: formato usuario@dominio.tld válido. Si no, responde: "Ese correo no parece válido 🙏 ¿me lo reenvías? ej: nombre@gmail.com". Reintenta.
-- Si save_lead retorna un error de validación, NO inventes datos: pide al usuario SOLO el campo que falló, con un ejemplo claro, y reintenta save_lead cuando lo tengas.
-- Nunca llames save_lead si falta cualquiera de los 8 datos o si alguno no pasa validación.
+DATOS A RECOPILAR (de forma conversacional, no en orden rígido):
+1. edad — una de: "Menor de 40", "41-50", "51-60", "61-70", "Mayor de 70".
+2. dentadura_postiza — "Sí" o "No".
+3. num_implantes — "1", "2-3", "4-5", "Más de 6", "No lo sabe".
+4. presupuesto — "Hasta 800€", "Hasta 1.500€", "Hasta 2.000€", "Más de 2.000€", "No definido".
+5. nombre (nombre y apellido).
+6. telefono (móvil español, +34 6XXXXXXXX o 7XXXXXXXX — 9 dígitos empezando por 6 o 7).
+7. email (correo válido).
+
+MANEJO DE PRECIOS (importante):
+Si preguntan precio responde algo como: "El coste varía bastante según el número de implantes, el estado del hueso y el tratamiento recomendado. Para darte una valoración precisa lo mejor es que uno de nuestros especialistas revise tu caso." Acto seguido pide su contacto para coordinar la llamada.
+
+OBJECIONES:
+Si dudan, habla de calidad de vida, comodidad, recuperación funcional y estética. Nunca presiones.
+
+SEÑALES DE ALTA INTENCIÓN (dolor, pérdida reciente, prótesis incómoda, urgencia, interés en financiación, pedir presupuesto): prioriza cerrar la cita pidiendo nombre, teléfono y email.
+
+VALIDACIONES (obligatorias antes de guardar):
+- Teléfono: móvil español, normaliza a +34XXXXXXXXX (9 dígitos empezando por 6 o 7). Acepta "612 345 678", "+34612345678", "0034612345678". Si falla: "¿Me confirmas tu móvil? Debe ser un número español de 9 dígitos que empieza por 6 o 7, ej: +34 612 345 678 📱". Reintenta hasta 3 veces.
+- Email: formato usuario@dominio.tld. Si falla: "Ese correo no parece válido 🙏 ¿me lo reenvías? ej: nombre@gmail.com".
+- Si save_lead retorna validation_error, NO inventes datos: pide SOLO el campo fallido con ejemplo claro y reintenta.
 
 CIERRE:
-- Cuando tengas TODOS los 8 datos válidos, DEBES invocar la herramienta "save_lead" con los datos exactos. NUNCA escribas el nombre de la herramienta ni sus argumentos en el texto del chat.
-- Solo DESPUÉS de que la herramienta retorne, envía un mensaje de confirmación: "¡Listo {nombre}! ✅ Una clínica colaboradora te contactará al {telefono} en las próximas horas para confirmar tu cita gratuita. También te enviaremos la información a {email}."
+- Cuando tengas los 7 datos válidos DEBES invocar la herramienta "save_lead" con los datos exactos. NUNCA escribas el nombre de la herramienta ni sus argumentos en el chat.
+- Después de que la herramienta retorne, envía: "Perfecto {nombre} ✅ Voy a coordinar una llamada con uno de nuestros especialistas para que pueda orientarte y darte una valoración personalizada. Te contactaremos al {telefono} en las próximas horas."
 
-REGLA CRÍTICA: Si el usuario en un solo mensaje te entrega varios datos, NO los repitas en texto: invoca directamente save_lead con todos los campos.
+REGLA CRÍTICA: si el usuario te entrega varios datos en un mismo mensaje, NO los repitas en texto: invoca directamente save_lead con todos los campos disponibles (y pide solo los que falten).
 
-No saludes de nuevo si ya saludaste. Empieza preguntando el nombre si no lo tienes.`;
+No saludes de nuevo si ya saludaste.`;
 
 const PHONE_RE = /^\+34[67]\d{8}$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -85,11 +97,11 @@ const normalizeName = (raw: string) => {
     .join(" ");
 };
 
-const normalizeSituacion = (raw: string) => {
+const normalizeField = (raw: string) => {
   const cleaned = stripDiacritics(raw)
     .trim()
     .replace(/\s+/g, " ")
-    .replace(/[^a-zA-Z\s-/()]/g, "")
+    .replace(/[^a-zA-Z0-9\s\-/€().,+]/g, "")
     .replace(/\s+/g, " ");
   return cleaned
     .split(" ")
@@ -97,16 +109,15 @@ const normalizeSituacion = (raw: string) => {
     .join(" ");
 };
 
-const dedupKey = (nombre: string, situacion: string) =>
-  `${normalizeName(nombre).toLowerCase()}|${normalizeSituacion(situacion).toLowerCase()}`;
+const dedupKey = (nombre: string, telefono: string) =>
+  `${normalizeName(nombre).toLowerCase()}|${telefono.replace(/\D/g, "")}`;
 
 const LeadSchema = z.object({
   nombre: z.string().trim().transform(normalizeName).refine((v) => v.length >= 2, { message: "Nombre demasiado corto" }),
-  situacion: z.string().trim().transform(normalizeSituacion).refine((v) => v.length >= 2, { message: "Situación demasiado corta" }),
-  radiografia: z.string().trim().min(1),
-  seguro: z.string().trim().min(2),
-  provincia: z.string().trim().min(2),
-  horario: z.string().trim().min(2),
+  edad: z.string().trim().transform(normalizeField).refine((v) => v.length >= 1, { message: "Edad requerida" }),
+  dentadura_postiza: z.string().trim().transform(normalizeField).refine((v) => /^(Si|Sí|No)$/i.test(v), { message: "Indica Sí o No para dentadura postiza" }),
+  num_implantes: z.string().trim().transform(normalizeField).refine((v) => v.length >= 1, { message: "Número de implantes requerido" }),
+  presupuesto: z.string().trim().transform(normalizeField).refine((v) => v.length >= 2, { message: "Presupuesto requerido" }),
   telefono: z
     .string()
     .trim()
@@ -140,11 +151,10 @@ export const Route = createFileRoute("/api/chat")({
             "Guarda el lead en el CRM (Google Sheets) una vez recolectados TODOS los datos validados. Si algún campo no pasa validación, retorna ok:false con el campo y motivo — vuelve a pedirlo al usuario y reintenta.",
           inputSchema: z.object({
             nombre: z.string(),
-            situacion: z.string(),
-            radiografia: z.string(),
-            seguro: z.string(),
-            provincia: z.string(),
-            horario: z.string(),
+            edad: z.string(),
+            dentadura_postiza: z.string(),
+            num_implantes: z.string(),
+            presupuesto: z.string(),
             telefono: z.string(),
             email: z.string(),
           }),
@@ -166,8 +176,8 @@ export const Route = createFileRoute("/api/chat")({
             const input = parsed.data;
             const ts = new Date().toLocaleString("es-ES", { timeZone: "Europe/Madrid" });
             try {
-              // Deduplicación: evita guardar el mismo lead (mismo nombre+situación normalizados)
-              const targetKey = dedupKey(input.nombre, input.situacion);
+              // Deduplicación: evita guardar el mismo lead (mismo nombre+telefono)
+              const targetKey = dedupKey(input.nombre, input.telefono);
               try {
                 const existing = await getLeadKeySet(dedupKey);
                 if (existing.has(targetKey)) {
@@ -175,7 +185,7 @@ export const Route = createFileRoute("/api/chat")({
                     ok: true,
                     duplicate: true,
                     message:
-                      "Lead ya existente en el CRM (mismo nombre y situación). No se guardó duplicado; continúa con el cierre normal.",
+                      "Lead ya existente en el CRM (mismo nombre y teléfono). No se guardó duplicado; continúa con el cierre normal.",
                   };
                 }
               } catch (err) {
@@ -185,14 +195,13 @@ export const Route = createFileRoute("/api/chat")({
               await appendLeadRow([
                 ts,
                 input.nombre,
-                input.situacion,
-                input.radiografia,
-                input.seguro,
-                input.provincia,
-                input.horario,
+                input.edad,
+                input.dentadura_postiza,
+                input.num_implantes,
+                input.presupuesto,
                 input.telefono,
                 input.email,
-                "landing-gelito",
+                "landing-sofia",
               ]);
               addLeadKeyToCache(targetKey);
               return { ok: true, message: "Lead guardado en CRM." };

@@ -3,15 +3,15 @@ import { useEffect, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import ReactMarkdown from "react-markdown";
-import gelitoAvatar from "@/assets/gelito-avatar.jpg";
+import sofiaAvatar from "@/assets/sofia-avatar.jpg";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Comparador de Implantes Dentales · Presupuesto personalizado gratis" },
-      { name: "description", content: "Encuentra la mejor oferta de implantes dentales en tu clínica más cercana en España. Habla con Gelito y recibe un presupuesto personalizado gratuito." },
-      { property: "og:title", content: "Comparador de Implantes Dentales · Habla con Gelito" },
-      { property: "og:description", content: "Presupuesto personalizado de implantes dentales en clínicas colaboradoras de toda España. Consulta inicial gratuita." },
+      { title: "Implantes Dentales · Habla con Sofía y recibe tu valoración" },
+      { name: "description", content: "Sofía, asesora especializada en implantes dentales, te ayuda a valorar tu caso y coordinar una llamada con un especialista. Consulta inicial gratuita." },
+      { property: "og:title", content: "Implantes Dentales · Habla con Sofía" },
+      { property: "og:description", content: "Asesoramiento personalizado en implantes dentales con Sofía. Coordina una llamada con uno de nuestros especialistas." },
     ],
   }),
   component: Index,
@@ -27,7 +27,7 @@ function Index() {
       parts: [
         {
           type: "text",
-          text: "¡Hola! 👋 Soy **Gelito**, tu asesor del Comparador de Implantes Dentales. Te ayudo a recibir un presupuesto personalizado en menos de un minuto. ¿Cuál es tu nombre y apellido?",
+          text: "¡Hola! 👋 Soy **Sofía**, asesora especializada en implantes dentales. Cuéntame brevemente, ¿qué te ha llevado a interesarte por los implantes?",
         },
       ],
     },
@@ -35,7 +35,7 @@ function Index() {
 
   const transport = new DefaultChatTransport({ api: "/api/chat" });
   const { messages, sendMessage, status, error } = useChat({
-    id: "gelito-chat",
+    id: "sofia-chat",
     messages: initialMessages,
     transport,
   });
@@ -63,10 +63,10 @@ function Index() {
     setTimeout(() => inputRef.current?.focus(), 50);
   };
 
-  const whatsappFallback = `https://wa.me/${WHATSAPP_NUMBER}?text=Hola%20Gelito,%20quiero%20mi%20presupuesto%20de%20implantes.`;
+  const whatsappFallback = `https://wa.me/${WHATSAPP_NUMBER}?text=Hola%20Sof%C3%ADa,%20me%20interesan%20los%20implantes%20dentales.`;
 
   const scrollToChat = () => {
-    document.getElementById("gelito-chat")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    document.getElementById("sofia-chat")?.scrollIntoView({ behavior: "smooth", block: "center" });
   };
 
   return (
@@ -88,8 +88,8 @@ function Index() {
             <span className="text-primary text-lg font-bold">🦷</span>
           </div>
           <div className="leading-tight">
-            <div className="text-sm font-semibold tracking-wide">COMPARADOR IMPLANTES</div>
-            <div className="text-[11px] text-muted-foreground">Implantes dentales · Presupuesto personalizado</div>
+            <div className="text-sm font-semibold tracking-wide">IMPLANTES DENTALES</div>
+            <div className="text-[11px] text-muted-foreground">Asesoramiento personalizado con Sofía</div>
           </div>
         </div>
         <button
@@ -97,7 +97,7 @@ function Index() {
           className="inline-flex items-center gap-2 rounded-full bg-[var(--cta)] px-4 py-2 text-sm font-medium text-[var(--cta-foreground)] shadow-lg shadow-[var(--cta)]/30 transition hover:brightness-110"
         >
           <span className="h-2 w-2 rounded-full bg-[var(--online)] animate-pulse" />
-          Habla con Gelito →
+          Habla con Sofía →
         </button>
       </header>
 
@@ -110,22 +110,21 @@ function Index() {
         <h1 className="mt-8 text-4xl font-bold leading-tight sm:text-5xl">
           ¿Necesitas implantes dentales?
           <br />
-          <span className="text-accent">Compara y ahorra hasta un 40%.</span>
+          <span className="text-accent">Recupera tu sonrisa con confianza.</span>
         </h1>
         <p className="mx-auto mt-6 max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base">
-          Recibe un presupuesto personalizado en tu clínica dental más cercana.{" "}
-          <span className="font-semibold text-foreground">Clínicas colaboradoras acreditadas</span> en toda España. Consulta inicial gratuita.
+          Habla con <span className="font-semibold text-foreground">Sofía</span>, nuestra asesora especializada. Valoramos tu caso y coordinamos una llamada con uno de nuestros especialistas. Consulta inicial gratuita.
         </p>
         <button
           onClick={scrollToChat}
           className="mt-7 inline-flex items-center gap-2 rounded-full border border-[var(--online)]/40 bg-[var(--online)]/10 px-5 py-2 text-sm text-foreground transition hover:bg-[var(--online)]/20"
         >
           <span className="h-2 w-2 rounded-full bg-[var(--online)]" />
-          Disponibilidad esta semana — habla con Gelito ahora
+          Disponibilidad esta semana — habla con Sofía ahora
         </button>
 
         <ul className="mt-6 flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs text-muted-foreground sm:text-sm">
-          {["Consulta inicial gratuita", "Radiografía sin coste", "Financiación hasta 60 meses", "Clínicas acreditadas"].map((f) => (
+          {["Consulta inicial gratuita", "Valoración personalizada", "Financiación disponible", "Especialistas acreditados"].map((f) => (
             <li key={f} className="flex items-center gap-1.5">
               <span className="text-accent">✓</span>
               {f}
@@ -135,13 +134,13 @@ function Index() {
       </main>
 
       {/* Chat */}
-      <section id="gelito-chat" className="relative z-10 mx-auto max-w-2xl px-6 pb-16">
+      <section id="sofia-chat" className="relative z-10 mx-auto max-w-2xl px-6 pb-16">
         <div className="mb-4 flex flex-wrap items-center justify-center gap-3 text-center">
           <span className="inline-flex items-center gap-2 rounded-full border border-accent/40 bg-card px-3 py-1 text-[11px] font-semibold tracking-wider text-primary shadow-sm">
-            <span className="h-1.5 w-1.5 rounded-full bg-accent" /> GELITO · COMPARADOR IMPLANTES
+            <span className="h-1.5 w-1.5 rounded-full bg-accent" /> SOFÍA · ASESORA DENTAL
           </span>
           <span className="text-xs text-muted-foreground">
-            Cuéntale a <strong className="text-foreground">Gelito</strong> tu caso y te buscará la mejor clínica.
+            Cuéntale a <strong className="text-foreground">Sofía</strong> tu caso y coordinará tu valoración.
           </span>
         </div>
 
@@ -150,12 +149,12 @@ function Index() {
           <div className="flex items-center justify-between border-b border-border px-5 py-4">
             <div className="flex items-center gap-3">
               <div className="relative">
-                <img src={gelitoAvatar} alt="Gelito" width={44} height={44} className="h-11 w-11 rounded-full border-2 border-accent/60 object-cover" loading="lazy" />
+                <img src={sofiaAvatar} alt="Sofía" width={44} height={44} className="h-11 w-11 rounded-full border-2 border-accent/60 object-cover" loading="lazy" />
                 <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-card bg-[var(--online)]" />
               </div>
               <div className="leading-tight">
-                <div className="text-sm font-semibold">Gelito</div>
-                <div className="text-[11px] text-muted-foreground">Asesor dental · Comparador Implantes</div>
+                <div className="text-sm font-semibold">Sofía</div>
+                <div className="text-[11px] text-muted-foreground">Asesora especializada · Implantes dentales</div>
               </div>
             </div>
             <span className="inline-flex items-center gap-1.5 text-[11px] text-[var(--online)]">
@@ -187,7 +186,7 @@ function Index() {
               }
               return (
                 <div key={m.id} className="flex gap-2.5">
-                  <img src={gelitoAvatar} alt="" width={32} height={32} className="h-8 w-8 flex-shrink-0 rounded-full object-cover" loading="lazy" />
+                  <img src={sofiaAvatar} alt="" width={32} height={32} className="h-8 w-8 flex-shrink-0 rounded-full object-cover" loading="lazy" />
                   <div className="flex max-w-[80%] flex-col gap-2">
                     {text && (
                       <div className="rounded-2xl rounded-bl-sm bg-[var(--bubble-bot)] px-4 py-2.5 text-sm leading-relaxed text-foreground prose prose-sm max-w-none [&_p]:my-1">
@@ -196,7 +195,7 @@ function Index() {
                     )}
                     {savedHere && (
                       <div className="inline-flex items-center gap-1.5 self-start rounded-full bg-[var(--online)]/15 px-3 py-1 text-[11px] text-[var(--online)]">
-                        <span>✓</span> Solicitud enviada a la clínica
+                        <span>✓</span> Solicitud enviada al especialista
                       </div>
                     )}
                   </div>
@@ -205,7 +204,7 @@ function Index() {
             })}
             {isLoading && (
               <div className="flex gap-2.5">
-                <img src={gelitoAvatar} alt="" width={32} height={32} className="h-8 w-8 rounded-full object-cover" loading="lazy" />
+                <img src={sofiaAvatar} alt="" width={32} height={32} className="h-8 w-8 rounded-full object-cover" loading="lazy" />
                 <div className="rounded-2xl rounded-bl-sm bg-[var(--bubble-bot)] px-4 py-3 text-sm">
                   <span className="inline-flex gap-1">
                     <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground [animation-delay:-0.3s]" />
@@ -217,7 +216,7 @@ function Index() {
             )}
             {error && (
               <div className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">
-                Ocurrió un error contactando a Gelito. Reintenta en unos segundos.
+                Ocurrió un error contactando a Sofía. Reintenta en unos segundos.
               </div>
             )}
           </div>
@@ -229,7 +228,7 @@ function Index() {
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder={leadSaved ? "¡Listo! Puedes seguir conversando…" : "Escribe tu respuesta a Gelito…"}
+              placeholder={leadSaved ? "¡Listo! Puedes seguir conversando…" : "Escribe tu respuesta a Sofía…"}
               disabled={isLoading}
               autoComplete="off"
               maxLength={500}
