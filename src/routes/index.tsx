@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import LeadForm from "@/components/LeadForm";
 import TestimonialsSection from "@/components/TestimonialsSection";
+import logoComparador from "@/assets/logo-comparador.png.asset.json";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -26,18 +27,15 @@ function Index() {
     <div className="relative min-h-screen overflow-hidden bg-background text-foreground">
       {/* Brand band — navy header (replicates comparadorimplantes.es) */}
       <header className="relative z-10 bg-[var(--brand-navy)] text-[var(--brand-navy-foreground)]">
-        <div className="mx-auto flex max-w-6xl flex-col items-center gap-3 px-6 py-7 text-center sm:py-9">
-          <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-white/70">
-              <span className="text-2xl">🦷</span>
-            </div>
-            <div className="leading-tight">
-              <div className="text-xl font-light tracking-wide sm:text-2xl">Comparador</div>
-              <div className="mt-1 inline-block rounded-full border border-white/80 px-3 py-0.5 text-[10px] font-bold tracking-[0.18em] sm:text-xs">
-                IMPLANTES DENTALES
-              </div>
-            </div>
-          </div>
+        <div className="mx-auto flex max-w-6xl items-center justify-center px-6 py-6 sm:py-8">
+          <a href="/" aria-label="Comparador de Implantes Dentales" className="inline-block">
+            <img
+              src={logoComparador.url}
+              alt="Comparador de Implantes Dentales"
+              className="h-16 w-auto sm:h-20"
+              loading="eager"
+            />
+          </a>
         </div>
       </header>
 
@@ -211,12 +209,52 @@ function Index() {
       {/* Testimonios */}
       <TestimonialsSection />
 
-      {/* Footer */}
-      <footer className="relative z-10 border-t border-border bg-background/70">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-6 py-5 text-xs text-muted-foreground sm:flex-row">
-          <span>© 2026 Comparador de Implantes Dentales · Valencia, España</span>
-          <span>Este sitio no reemplaza una consulta odontológica.</span>
-          <a href="#" className="underline-offset-2 hover:underline">Privacidad</a>
+      {/* Footer — replicates comparadorimplantes.es */}
+      <footer className="relative z-10 bg-white text-[var(--brand-navy)]">
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-6 px-6 py-8 lg:flex-row">
+          <div className="flex items-center gap-2 text-sm sm:text-base">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5 text-[var(--accent)]" aria-hidden="true">
+              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z" />
+            </svg>
+            <span>Pasaje Ventura Feliu, 21, 2A. 46007 Valencia.</span>
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <a href="mailto:info@comparadorimplantes.es" className="inline-flex items-center gap-2 rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-110">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
+                <rect x="3" y="5" width="18" height="14" rx="2" />
+                <path d="m3 7 9 6 9-6" />
+              </svg>
+              info@comparadorimplantes.es
+            </a>
+            <a href="tel:+34963412467" className="inline-flex items-center gap-2 rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-110">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.37 1.9.72 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.35 1.85.59 2.81.72A2 2 0 0 1 22 16.92z" />
+              </svg>
+              963 41 24 67
+            </a>
+            <a href="tel:+34611020278" className="inline-flex items-center gap-2 rounded-full bg-[var(--accent)] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:brightness-110">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
+                <rect x="7" y="2" width="10" height="20" rx="2" />
+                <path d="M11 18h2" />
+              </svg>
+              611 02 02 78
+            </a>
+          </div>
+        </div>
+        <div className="bg-[#ebeceb]">
+          <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-6 py-4 text-xs text-[var(--brand-navy)] sm:text-sm lg:flex-row">
+            <p>
+              © 2018 - 2026 | <strong>Comparador de Implantes Online</strong>. Todos los derechos reservados.
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
+              {["Aviso Legal", "Política de Cookies", "Política de Privacidad"].map((item) => (
+                <a key={item} href="#" className="inline-flex items-center gap-1.5 hover:underline">
+                  <span className="text-[var(--accent)]">✓</span>
+                  {item}
+                </a>
+              ))}
+            </div>
+          </div>
         </div>
       </footer>
     </div>
