@@ -48,15 +48,32 @@ const normalizePhone = (raw: string) => {
   return raw.trim();
 };
 
+const PARTICLES = new Set([
+  "de", "del", "la", "los", "las", "y", "e", "san", "santa",
+  "do", "dos", "da", "das", "von", "van", "bin", "ibn",
+]);
+
 const normalizeName = (raw: string) => {
   const cleaned = raw
     .trim()
     .replace(/\s+/g, " ")
-    .replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s-]/g, "")
+    .replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s'-]/g, "")
     .replace(/\s+/g, " ");
+
   return cleaned
     .split(" ")
-    .map((w) => (w ? w[0].toUpperCase() + w.slice(1).toLowerCase() : ""))
+    .map((word, wordIdx) => {
+      if (!word) return "";
+      const parts = word.split("-");
+      return parts
+        .map((part) => {
+          if (!part) return "";
+          const lower = part.toLowerCase();
+          if (wordIdx > 0 && PARTICLES.has(lower)) return lower;
+          return part[0].toUpperCase() + part.slice(1).toLowerCase();
+        })
+        .join("-");
+    })
     .join(" ");
 };
 
