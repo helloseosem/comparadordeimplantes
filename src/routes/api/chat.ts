@@ -85,7 +85,7 @@ const normalizeName = (raw: string) => {
     .join(" ");
 };
 
-const normalizePatologia = (raw: string) => {
+const normalizeSituacion = (raw: string) => {
   const cleaned = stripDiacritics(raw)
     .trim()
     .replace(/\s+/g, " ")
@@ -97,15 +97,15 @@ const normalizePatologia = (raw: string) => {
     .join(" ");
 };
 
-const dedupKey = (nombre: string, patologia: string) =>
-  `${normalizeName(nombre).toLowerCase()}|${normalizePatologia(patologia).toLowerCase()}`;
+const dedupKey = (nombre: string, situacion: string) =>
+  `${normalizeName(nombre).toLowerCase()}|${normalizeSituacion(situacion).toLowerCase()}`;
 
 const LeadSchema = z.object({
   nombre: z.string().trim().transform(normalizeName).refine((v) => v.length >= 2, { message: "Nombre demasiado corto" }),
-  patologia: z.string().trim().transform(normalizePatologia).refine((v) => v.length >= 2, { message: "Patología demasiado corta" }),
-  examen: z.string().trim().min(1),
-  prevision: z.string().trim().min(2),
-  region: z.string().trim().min(2),
+  situacion: z.string().trim().transform(normalizeSituacion).refine((v) => v.length >= 2, { message: "Situación demasiado corta" }),
+  radiografia: z.string().trim().min(1),
+  seguro: z.string().trim().min(2),
+  provincia: z.string().trim().min(2),
   horario: z.string().trim().min(2),
   telefono: z
     .string()
@@ -113,7 +113,7 @@ const LeadSchema = z.object({
     .transform(normalizePhone)
     .refine((v) => PHONE_RE.test(v), {
       message:
-        "Teléfono inválido. Debe ser celular chileno formato +569XXXXXXXX (9 dígitos empezando con 9).",
+        "Teléfono inválido. Debe ser móvil español formato +34XXXXXXXXX (9 dígitos empezando por 6 o 7).",
     }),
   email: z
     .string()
@@ -140,10 +140,10 @@ export const Route = createFileRoute("/api/chat")({
             "Guarda el lead en el CRM (Google Sheets) una vez recolectados TODOS los datos validados. Si algún campo no pasa validación, retorna ok:false con el campo y motivo — vuelve a pedirlo al usuario y reintenta.",
           inputSchema: z.object({
             nombre: z.string(),
-            patologia: z.string(),
-            examen: z.string(),
-            prevision: z.string(),
-            region: z.string(),
+            situacion: z.string(),
+            radiografia: z.string(),
+            seguro: z.string(),
+            provincia: z.string(),
             horario: z.string(),
             telefono: z.string(),
             email: z.string(),
@@ -164,10 +164,10 @@ export const Route = createFileRoute("/api/chat")({
               };
             }
             const input = parsed.data;
-            const ts = new Date().toLocaleString("es-CL", { timeZone: "America/Santiago" });
+            const ts = new Date().toLocaleString("es-ES", { timeZone: "Europe/Madrid" });
             try {
-              // Deduplicación: evita guardar el mismo lead (mismo nombre+patología normalizados)
-              const targetKey = dedupKey(input.nombre, input.patologia);
+              // Deduplicación: evita guardar el mismo lead (mismo nombre+situación normalizados)
+              const targetKey = dedupKey(input.nombre, input.situacion);
               try {
                 const existing = await getLeadKeySet(dedupKey);
                 if (existing.has(targetKey)) {
@@ -175,7 +175,7 @@ export const Route = createFileRoute("/api/chat")({
                     ok: true,
                     duplicate: true,
                     message:
-                      "Lead ya existente en el CRM (mismo nombre y patología). No se guardó duplicado; continúa con el cierre normal.",
+                      "Lead ya existente en el CRM (mismo nombre y situación). No se guardó duplicado; continúa con el cierre normal.",
                   };
                 }
               } catch (err) {
@@ -185,14 +185,14 @@ export const Route = createFileRoute("/api/chat")({
               await appendLeadRow([
                 ts,
                 input.nombre,
-                input.patologia,
-                input.examen,
-                input.prevision,
-                input.region,
+                input.situacion,
+                input.radiografia,
+                input.seguro,
+                input.provincia,
                 input.horario,
                 input.telefono,
                 input.email,
-                "landing-luna",
+                "landing-gelito",
               ]);
               addLeadKeyToCache(targetKey);
               return { ok: true, message: "Lead guardado en CRM." };
