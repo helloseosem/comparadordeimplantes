@@ -12,8 +12,8 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
-// 👉 Reemplaza con tu Measurement ID real de GA4 (formato G-XXXXXXXXXX)
-export const GA_MEASUREMENT_ID = "G-XXXXXXXXXX";
+// Measurement ID de GA4
+export const GA_MEASUREMENT_ID = "G-JMKHGZ6N79";
 
 function NotFoundComponent() {
   return (
@@ -95,7 +95,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: appCss,
       },
     ],
-    scripts: GA_MEASUREMENT_ID.startsWith("G-") && GA_MEASUREMENT_ID !== "G-XXXXXXXXXX"
+    scripts: (GA_MEASUREMENT_ID as string).startsWith("G-") && (GA_MEASUREMENT_ID as string) !== "G-XXXXXXXXXX"
       ? [
           {
             src: `https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`,
