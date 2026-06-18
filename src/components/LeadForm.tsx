@@ -57,7 +57,7 @@ const STEPS: Step[] = [
     kind: "choice",
     question: "¿Cuántos implantes crees que necesitas?",
     hint: "Una estimación está bien. El especialista lo confirmará.",
-    options: ["1", "2-3", "4-5", "Más de 6", "No lo sé"],
+    options: ["1", "2-3", "4-5", "Más de 6", "No lo sé, necesito asesoramiento"],
   },
   {
     key: "presupuesto",
@@ -95,7 +95,7 @@ const STEPS: Step[] = [
   {
     key: "cita",
     kind: "cita",
-    question: "¿Cuándo prefieres que te llamemos?",
+    question: "¿Cuándo prefieres acudir a la cita de valoración gratuita?",
     hint: "Elige un día y una franja horaria.",
   },
 ];
