@@ -22,10 +22,11 @@ DATOS QUE DEBES RECOLECTAR (en este orden lógico, adaptándote a lo que ya dijo
 7. telefono (teléfono chileno, +56 9 XXXX XXXX)
 8. email (correo válido)
 
-VALIDACIONES:
-- Teléfono: número chileno de 8 a 11 dígitos, idealmente formato +569XXXXXXXX. Si no calza, pide confirmación amable.
-- Email: debe tener @ y dominio. Si no, pide de nuevo.
-- No avances al siguiente dato si el actual no es válido.
+VALIDACIONES (OBLIGATORIAS — no avances si fallan):
+- Teléfono: móvil chileno. Debe normalizarse a +569XXXXXXXX (9 dígitos después del +56, empezando por 9). Acepta variantes como "9 1234 5678", "+56912345678", "56912345678" y normalízalas. Si tiene menos de 8 dígitos o no empieza por 9, pide AMABLEMENTE que lo reenvíe: "¿Me confirmas tu celular? Debe ser un número chileno de 9 dígitos que empieza con 9, ej: +56 9 1234 5678 📱". Reintenta hasta 3 veces antes de continuar.
+- Email: debe tener formato usuario@dominio.tld válido. Si no, responde: "Ese correo no parece válido 🙏 ¿me lo reenvías? ej: nombre@gmail.com". Reintenta.
+- Si la herramienta save_lead retorna un error de validación (campo inválido), NO inventes datos: pide al usuario SOLO el campo que falló, con un ejemplo claro, y reintenta save_lead cuando lo tengas.
+- Nunca llames save_lead si falta cualquiera de los 8 datos o si alguno no pasa validación.
 
 CIERRE:
 - Cuando tengas TODOS los 8 datos válidos, DEBES invocar la herramienta (function tool) "save_lead" con los datos exactos. NUNCA escribas el nombre de la herramienta ni sus argumentos en el texto del chat. NUNCA simules la llamada en prosa.
@@ -35,15 +36,38 @@ REGLA CRÍTICA: Si el usuario en un solo mensaje te entrega varios datos, NO los
 
 No saludes de nuevo si ya saludaste. Empieza preguntando el nombre si no lo tienes.`;
 
+const PHONE_RE = /^\+?56?9\d{8}$/;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+const normalizePhone = (raw: string) => {
+  const digits = raw.replace(/\D/g, "");
+  // strip leading 56 country code if present
+  const local = digits.startsWith("56") ? digits.slice(2) : digits;
+  if (local.length === 9 && local.startsWith("9")) return `+56${local}`;
+  if (local.length === 8) return `+569${local}`;
+  return raw.trim();
+};
+
 const LeadSchema = z.object({
-  nombre: z.string().min(2),
-  patologia: z.string().min(2),
-  examen: z.string().min(1),
-  prevision: z.string().min(2),
-  region: z.string().min(2),
-  horario: z.string().min(2),
-  telefono: z.string().min(8),
-  email: z.string().email(),
+  nombre: z.string().trim().min(2, "Nombre demasiado corto"),
+  patologia: z.string().trim().min(2),
+  examen: z.string().trim().min(1),
+  prevision: z.string().trim().min(2),
+  region: z.string().trim().min(2),
+  horario: z.string().trim().min(2),
+  telefono: z
+    .string()
+    .trim()
+    .transform(normalizePhone)
+    .refine((v) => PHONE_RE.test(v), {
+      message:
+        "Teléfono inválido. Debe ser celular chileno formato +569XXXXXXXX (9 dígitos empezando con 9).",
+    }),
+  email: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .refine((v) => EMAIL_RE.test(v), { message: "Email inválido. Ej: nombre@gmail.com" }),
 });
 
 export const Route = createFileRoute("/api/chat")({
@@ -61,9 +85,33 @@ export const Route = createFileRoute("/api/chat")({
 
         const saveLead = tool({
           description:
-            "Guarda el lead en el CRM (Google Sheets) una vez recolectados TODOS los datos validados.",
-          inputSchema: LeadSchema,
-          execute: async (input) => {
+            "Guarda el lead en el CRM (Google Sheets) una vez recolectados TODOS los datos validados. Si algún campo no pasa validación, retorna ok:false con el campo y motivo — vuelve a pedirlo al usuario y reintenta.",
+          inputSchema: z.object({
+            nombre: z.string(),
+            patologia: z.string(),
+            examen: z.string(),
+            prevision: z.string(),
+            region: z.string(),
+            horario: z.string(),
+            telefono: z.string(),
+            email: z.string(),
+          }),
+          execute: async (raw) => {
+            const parsed = LeadSchema.safeParse(raw);
+            if (!parsed.success) {
+              const issues = parsed.error.issues.map((i) => ({
+                field: i.path.join("."),
+                message: i.message,
+              }));
+              return {
+                ok: false,
+                validation_error: true,
+                issues,
+                message:
+                  "Validación falló. Pide al usuario SOLO los campos listados en issues con un ejemplo claro, y vuelve a llamar save_lead con los datos corregidos.",
+              };
+            }
+            const input = parsed.data;
             const ts = new Date().toLocaleString("es-CL", { timeZone: "America/Santiago" });
             try {
               await appendLeadRow([
