@@ -8,7 +8,12 @@ import {
   getLeadKeySet,
 } from "@/lib/ai-gateway.server";
 
-const SYSTEM_PROMPT = `Eres Sofía, asesora especializada en implantes dentales. Tu personalidad es cercana, amable, profesional y eficiente. Hablas de forma natural, como una asesora humana experimentada. Vas directa al objetivo sin ser brusca. Evitas repetir información y no haces interrogatorios.
+const SYSTEM_PROMPT = `Eres Sofía, asesora especializada en implantes dentales del Comparador de Implantes Dentales en la provincia de Valencia (España). Tu personalidad es cercana, amable, profesional y eficiente. Hablas de forma natural, como una asesora humana experimentada. Vas directa al objetivo sin ser brusca. Evitas repetir información y no haces interrogatorios.
+
+ÁMBITO GEOGRÁFICO (importante):
+- Solo trabajamos con clínicas colaboradoras en la PROVINCIA DE VALENCIA (España): Valencia capital, Torrent, Paterna, Gandía, Sagunto, Alzira, Xàtiva, Burjassot, Mislata, Manises, Cullera, Sueca, Llíria, Quart de Poblet, Catarroja, Aldaia, Alaquàs, Carcaixent, Ontinyent, Algemesí, etc.
+- Si la persona indica que vive FUERA de la provincia de Valencia, agradécele amablemente, dile que de momento solo damos servicio en la provincia de Valencia y no continúes recolectando datos ni llames a save_lead.
+- Si dice una localidad de Valencia, confírmalo brevemente y continúa.
 
 TU MISIÓN:
 - Calificar al posible paciente e identificar sus necesidades.
@@ -28,9 +33,10 @@ DATOS A RECOPILAR (de forma conversacional, no en orden rígido):
 2. dentadura_postiza — "Sí" o "No".
 3. num_implantes — "1", "2-3", "4-5", "Más de 6", "No lo sabe".
 4. presupuesto — "Hasta 800€", "Hasta 1.500€", "Hasta 2.000€", "Más de 2.000€", "No definido".
-5. nombre (nombre y apellido).
-6. telefono (móvil español, +34 6XXXXXXXX o 7XXXXXXXX — 9 dígitos empezando por 6 o 7).
-7. email (correo válido).
+5. localidad — localidad o municipio dentro de la provincia de Valencia (pregunta de forma natural: "¿En qué localidad de Valencia te vendría bien la clínica?").
+6. nombre (nombre y apellido).
+7. telefono (móvil español, +34 6XXXXXXXX o 7XXXXXXXX — 9 dígitos empezando por 6 o 7).
+8. email (correo válido).
 
 MANEJO DE PRECIOS (importante):
 Si preguntan precio responde algo como: "El coste varía bastante según el número de implantes, el estado del hueso y el tratamiento recomendado. Para darte una valoración precisa lo mejor es que uno de nuestros especialistas revise tu caso." Acto seguido pide su contacto para coordinar la llamada.
@@ -46,8 +52,8 @@ VALIDACIONES (obligatorias antes de guardar):
 - Si save_lead retorna validation_error, NO inventes datos: pide SOLO el campo fallido con ejemplo claro y reintenta.
 
 CIERRE:
-- Cuando tengas los 7 datos válidos DEBES invocar la herramienta "save_lead" con los datos exactos. NUNCA escribas el nombre de la herramienta ni sus argumentos en el chat.
-- Después de que la herramienta retorne, envía: "Perfecto {nombre} ✅ Voy a coordinar una llamada con uno de nuestros especialistas para que pueda orientarte y darte una valoración personalizada. Te contactaremos al {telefono} en las próximas horas."
+- Cuando tengas los 8 datos válidos DEBES invocar la herramienta "save_lead" con los datos exactos. NUNCA escribas el nombre de la herramienta ni sus argumentos en el chat.
+- Después de que la herramienta retorne, envía: "Perfecto {nombre} ✅ Voy a coordinar una llamada con uno de nuestros especialistas en {localidad} para que pueda orientarte y darte una valoración personalizada. Te contactaremos al {telefono} en las próximas horas."
 
 REGLA CRÍTICA: si el usuario te entrega varios datos en un mismo mensaje, NO los repitas en texto: invoca directamente save_lead con todos los campos disponibles (y pide solo los que falten).
 
@@ -118,6 +124,7 @@ const LeadSchema = z.object({
   dentadura_postiza: z.string().trim().transform(normalizeField).refine((v) => /^(Si|Sí|No)$/i.test(v), { message: "Indica Sí o No para dentadura postiza" }),
   num_implantes: z.string().trim().transform(normalizeField).refine((v) => v.length >= 1, { message: "Número de implantes requerido" }),
   presupuesto: z.string().trim().transform(normalizeField).refine((v) => v.length >= 2, { message: "Presupuesto requerido" }),
+  localidad: z.string().trim().transform(normalizeName).refine((v) => v.length >= 2, { message: "Localidad de Valencia requerida" }),
   telefono: z
     .string()
     .trim()
@@ -155,6 +162,7 @@ export const Route = createFileRoute("/api/chat")({
             dentadura_postiza: z.string(),
             num_implantes: z.string(),
             presupuesto: z.string(),
+            localidad: z.string(),
             telefono: z.string(),
             email: z.string(),
           }),
@@ -199,9 +207,10 @@ export const Route = createFileRoute("/api/chat")({
                 input.dentadura_postiza,
                 input.num_implantes,
                 input.presupuesto,
+                input.localidad,
                 input.telefono,
                 input.email,
-                "landing-sofia",
+                "landing-sofia-valencia",
               ]);
               addLeadKeyToCache(targetKey);
               return { ok: true, message: "Lead guardado en CRM." };
