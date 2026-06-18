@@ -6,7 +6,6 @@ type StepKey =
   | "dentadura_postiza"
   | "num_implantes"
   | "presupuesto"
-  | "localidad"
   | "nombre"
   | "telefono"
   | "email"
@@ -58,7 +57,7 @@ const STEPS: Step[] = [
     kind: "choice",
     question: "¿Cuántos implantes crees que necesitas?",
     hint: "Una estimación está bien. El especialista lo confirmará.",
-    options: ["1", "2-3", "4-5", "Más de 6", "No lo sé"],
+    options: ["1", "2-3", "4-5", "Más de 6", "No lo sé, necesito asesoramiento"],
   },
   {
     key: "presupuesto",
@@ -66,14 +65,6 @@ const STEPS: Step[] = [
     question: "¿Qué presupuesto tienes en mente?",
     hint: "Hay opciones de financiación en todos los rangos.",
     options: ["Hasta 800€", "Hasta 1.500€", "Hasta 2.000€", "Más de 2.000€", "No definido"],
-  },
-  {
-    key: "localidad",
-    kind: "text",
-    question: "¿En qué localidad de Valencia te vendría mejor?",
-    hint: "Buscaremos la clínica colaboradora más cercana.",
-    placeholder: "Ej: Valencia, Torrent, Gandía…",
-    validate: (v) => (v.trim().length >= 2 ? null : "Indica una localidad"),
   },
   {
     key: "nombre",
@@ -104,7 +95,7 @@ const STEPS: Step[] = [
   {
     key: "cita",
     kind: "cita",
-    question: "¿Cuándo prefieres que te llamemos?",
+    question: "¿Cuándo prefieres acudir a la cita de valoración gratuita?",
     hint: "Elige un día y una franja horaria.",
   },
 ];
@@ -147,6 +138,9 @@ export default function LeadForm() {
   const step = STEPS[stepIndex];
   const days = useMemo(() => buildNextDays(3), []);
   const [citaDay, setCitaDay] = useState<string | null>(null);
+  const [citaTime, setCitaTime] = useState<string | null>(null);
+
+  const WHATSAPP_NUMBER = "34600000000";
 
   const progress = (stepIndex / STEPS.length) * 100;
 
@@ -154,17 +148,18 @@ export default function LeadForm() {
     setTextValue("");
     setError(null);
     setCitaDay(null);
+    setCitaTime(null);
     if (step?.kind === "text") {
       setTimeout(() => inputRef.current?.focus(), 250);
     }
   }, [stepIndex, step?.kind]);
 
-  const advance = (key: StepKey, value: string) => {
+  const advance = (key: StepKey, value: string, autoSubmit = true) => {
     setLeaving(true);
     setTimeout(() => {
       setAnswers((prev) => ({ ...prev, [key]: value }));
       if (stepIndex + 1 >= STEPS.length) {
-        void submit({ ...answers, [key]: value });
+        if (autoSubmit) void submit({ ...answers, [key]: value });
       } else {
         setStepIndex((i) => i + 1);
       }
@@ -172,7 +167,7 @@ export default function LeadForm() {
     }, 280);
   };
 
-  const submit = async (data: Record<string, string>) => {
+  const submit = async (data: Record<string, string>, viaWhatsApp = false) => {
     setSubmitting(true);
     setServerError(null);
     try {
@@ -187,11 +182,19 @@ export default function LeadForm() {
         setSubmitting(false);
         return;
       }
-      // Limpia estado tras envío exitoso y redirige
+      if (viaWhatsApp) {
+        const msg =
+          `Hola, acabo de rellenar el formulario.%0A` +
+          `Nombre: ${encodeURIComponent(data.nombre ?? "")}%0A` +
+          `Teléfono: ${encodeURIComponent(data.telefono ?? "")}%0A` +
+          `Cita preferida: ${encodeURIComponent(data.cita ?? "")}`;
+        window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`, "_blank");
+      }
       setAnswers({});
       setTextValue("");
       setStepIndex(0);
       setCitaDay(null);
+      setCitaTime(null);
       void navigate({ to: "/thank-you" });
     } catch {
       setServerError("Error de conexión. Revisa tu internet y reintenta.");
@@ -212,10 +215,17 @@ export default function LeadForm() {
     advance(step.key, v);
   };
 
-  const handleCitaPick = (day: string, time: string) => {
-    const found = days.find((d) => d.iso === day);
-    const label = found ? `${found.label} · ${time}` : `${day} ${time}`;
-    advance("cita", label);
+  const buildCitaLabel = () => {
+    if (!citaDay || !citaTime) return "";
+    const found = days.find((d) => d.iso === citaDay);
+    return found ? `${found.label} · ${citaTime}` : `${citaDay} ${citaTime}`;
+  };
+
+  const handleFinalSubmit = (viaWhatsApp: boolean) => {
+    const label = buildCitaLabel();
+    if (!label) return;
+    const data = { ...answers, cita: label };
+    void submit(data, viaWhatsApp);
   };
 
   return (
@@ -322,18 +332,48 @@ export default function LeadForm() {
                       HORARIOS DISPONIBLES
                     </div>
                     <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
-                      {SLOT_TIMES.map((t) => (
-                        <button
-                          key={t}
-                          type="button"
-                          disabled={submitting}
-                          onClick={() => handleCitaPick(citaDay, t)}
-                          className="rounded-xl border-2 border-border bg-background px-2 py-2.5 text-sm font-semibold text-foreground transition hover:border-accent hover:bg-secondary disabled:opacity-50"
-                        >
-                          {t}
-                        </button>
-                      ))}
+                      {SLOT_TIMES.map((t) => {
+                        const active = citaTime === t;
+                        return (
+                          <button
+                            key={t}
+                            type="button"
+                            disabled={submitting}
+                            onClick={() => setCitaTime(t)}
+                            className={`rounded-xl border-2 px-2 py-2.5 text-sm font-semibold transition disabled:opacity-50 ${
+                              active
+                                ? "border-accent bg-accent/10 text-primary"
+                                : "border-border bg-background text-foreground hover:border-accent hover:bg-secondary"
+                            }`}
+                          >
+                            {t}
+                          </button>
+                        );
+                      })}
                     </div>
+                  </div>
+                )}
+                {citaDay && citaTime && (
+                  <div className="grid gap-2.5 sm:grid-cols-2 animate-in fade-in duration-300">
+                    <button
+                      type="button"
+                      disabled={submitting}
+                      onClick={() => handleFinalSubmit(false)}
+                      className="inline-flex items-center justify-center gap-2 rounded-full bg-[var(--cta)] px-6 py-3.5 text-sm font-semibold text-[var(--cta-foreground)] shadow-lg shadow-[var(--cta)]/30 transition hover:brightness-110 disabled:opacity-50"
+                    >
+                      {submitting ? "Enviando…" : "Enviar solicitud →"}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={submitting}
+                      onClick={() => handleFinalSubmit(true)}
+                      className="inline-flex items-center justify-center gap-2 rounded-full bg-[#25D366] px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-[#25D366]/30 transition hover:brightness-110 disabled:opacity-50"
+                    >
+                      <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" aria-hidden="true">
+                        <path d="M20.52 3.48A11.78 11.78 0 0 0 12.04 0C5.5 0 .2 5.3.2 11.84c0 2.09.55 4.12 1.59 5.92L0 24l6.4-1.68a11.8 11.8 0 0 0 5.64 1.44h.01c6.54 0 11.84-5.3 11.84-11.84 0-3.16-1.23-6.13-3.37-8.44ZM12.05 21.5h-.01a9.66 9.66 0 0 1-4.93-1.35l-.35-.21-3.8 1 1.02-3.7-.23-.38a9.65 9.65 0 0 1-1.48-5.13c0-5.34 4.35-9.69 9.7-9.69 2.59 0 5.02 1.01 6.85 2.84a9.62 9.62 0 0 1 2.84 6.86c0 5.34-4.35 9.76-9.61 9.76Zm5.3-7.27c-.29-.15-1.72-.85-1.99-.95-.27-.1-.46-.15-.66.15-.19.29-.75.95-.92 1.14-.17.19-.34.22-.63.07-.29-.15-1.23-.45-2.34-1.44-.87-.77-1.45-1.72-1.62-2.01-.17-.29-.02-.45.13-.59.13-.13.29-.34.43-.51.14-.17.19-.29.29-.48.1-.19.05-.36-.02-.51-.07-.15-.66-1.59-.9-2.18-.24-.57-.48-.49-.66-.5l-.56-.01c-.19 0-.51.07-.78.36-.27.29-1.02 1-1.02 2.44s1.05 2.83 1.2 3.02c.15.19 2.07 3.16 5.02 4.43.7.3 1.25.48 1.67.62.7.22 1.34.19 1.84.12.56-.08 1.72-.7 1.97-1.38.24-.68.24-1.27.17-1.39-.07-.12-.27-.19-.56-.34Z"/>
+                      </svg>
+                      Enviar por WhatsApp
+                    </button>
                   </div>
                 )}
                 {submitting && (
