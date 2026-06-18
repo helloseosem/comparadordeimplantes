@@ -53,11 +53,13 @@ const PARTICLES = new Set([
   "do", "dos", "da", "das", "von", "van", "bin", "ibn",
 ]);
 
+const stripDiacritics = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
 const normalizeName = (raw: string) => {
-  const cleaned = raw
+  const cleaned = stripDiacritics(raw)
     .trim()
     .replace(/\s+/g, " ")
-    .replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s'-]/g, "")
+    .replace(/[^a-zA-Z\s'-]/g, "")
     .replace(/\s+/g, " ");
 
   return cleaned
@@ -78,10 +80,10 @@ const normalizeName = (raw: string) => {
 };
 
 const normalizePatologia = (raw: string) => {
-  const cleaned = raw
+  const cleaned = stripDiacritics(raw)
     .trim()
     .replace(/\s+/g, " ")
-    .replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s-/()]/g, "")
+    .replace(/[^a-zA-Z\s-/()]/g, "")
     .replace(/\s+/g, " ");
   return cleaned
     .split(" ")
