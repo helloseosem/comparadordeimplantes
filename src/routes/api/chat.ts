@@ -48,6 +48,30 @@ const normalizePhone = (raw: string) => {
   return raw.trim();
 };
 
+const normalizeName = (raw: string) => {
+  const cleaned = raw
+    .trim()
+    .replace(/\s+/g, " ")
+    .replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s-]/g, "")
+    .replace(/\s+/g, " ");
+  return cleaned
+    .split(" ")
+    .map((w) => (w ? w[0].toUpperCase() + w.slice(1).toLowerCase() : ""))
+    .join(" ");
+};
+
+const normalizePatologia = (raw: string) => {
+  const cleaned = raw
+    .trim()
+    .replace(/\s+/g, " ")
+    .replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s-/()]/g, "")
+    .replace(/\s+/g, " ");
+  return cleaned
+    .split(" ")
+    .map((w) => (w ? w[0].toUpperCase() + w.slice(1).toLowerCase() : ""))
+    .join(" ");
+};
+
 const LeadSchema = z.object({
   nombre: z.string().trim().min(2, "Nombre demasiado corto"),
   patologia: z.string().trim().min(2),
