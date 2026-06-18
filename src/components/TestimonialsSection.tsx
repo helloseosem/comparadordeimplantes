@@ -4,7 +4,7 @@ import testimonialImage from "@/assets/testimonial-patient.jpg";
 const testimonials = [
   {
     quote:
-      "Gracias al Comparador pude obtener los mejores precios. Después de buscar por diferentes ?¿las clínicas de Valencia, me consiguieron una oferta que no encontré por mi cuenta. Estoy haciéndome el tratamiento de implantes dentales en Valencia y, de momento, todo muy bien.",
+      "Gracias al Comparador pude obtener los mejores precios. Después de buscar por diferentes clínicas de Valencia, me consiguieron una oferta que no encontré por mi cuenta. Estoy haciéndome el tratamiento de implantes dentales en Valencia y, de momento, todo muy bien.",
     name: "Luis Pérez",
     role: "Usuario Comparador",
   },
