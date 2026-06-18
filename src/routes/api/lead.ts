@@ -34,7 +34,7 @@ const LeadSchema = z.object({
   dentadura_postiza: z.string().trim().min(1),
   num_implantes: z.string().trim().min(1),
   presupuesto: z.string().trim().min(1),
-  localidad: z.string().trim().min(2).transform(normalizeName),
+  localidad: z.string().trim().transform(normalizeName).optional().default("Valencia"),
   nombre: z.string().trim().min(2).transform(normalizeName),
   telefono: z.string().trim().transform(normalizePhone).refine((v) => PHONE_RE.test(v), {
     message: "Teléfono inválido. Debe ser móvil español (+34 6XXXXXXXX o 7XXXXXXXX).",
@@ -94,7 +94,7 @@ export const Route = createFileRoute("/api/lead")({
             input.dentadura_postiza,
             input.num_implantes,
             input.presupuesto,
-            input.localidad,
+            input.localidad ?? "Valencia",
             input.telefono,
             input.email,
             input.cita,
