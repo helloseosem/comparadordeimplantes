@@ -6,7 +6,6 @@ type StepKey =
   | "dentadura_postiza"
   | "num_implantes"
   | "presupuesto"
-  | "localidad"
   | "nombre"
   | "telefono"
   | "email"
@@ -66,14 +65,6 @@ const STEPS: Step[] = [
     question: "¿Qué presupuesto tienes en mente?",
     hint: "Hay opciones de financiación en todos los rangos.",
     options: ["Hasta 800€", "Hasta 1.500€", "Hasta 2.000€", "Más de 2.000€", "No definido"],
-  },
-  {
-    key: "localidad",
-    kind: "text",
-    question: "¿En qué localidad de Valencia te vendría mejor?",
-    hint: "Buscaremos la clínica colaboradora más cercana.",
-    placeholder: "Ej: Valencia, Torrent, Gandía…",
-    validate: (v) => (v.trim().length >= 2 ? null : "Indica una localidad"),
   },
   {
     key: "nombre",
