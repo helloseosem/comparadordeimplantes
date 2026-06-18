@@ -52,8 +52,8 @@ VALIDACIONES (obligatorias antes de guardar):
 - Si save_lead retorna validation_error, NO inventes datos: pide SOLO el campo fallido con ejemplo claro y reintenta.
 
 CIERRE:
-- Cuando tengas los 7 datos válidos DEBES invocar la herramienta "save_lead" con los datos exactos. NUNCA escribas el nombre de la herramienta ni sus argumentos en el chat.
-- Después de que la herramienta retorne, envía: "Perfecto {nombre} ✅ Voy a coordinar una llamada con uno de nuestros especialistas para que pueda orientarte y darte una valoración personalizada. Te contactaremos al {telefono} en las próximas horas."
+- Cuando tengas los 8 datos válidos DEBES invocar la herramienta "save_lead" con los datos exactos. NUNCA escribas el nombre de la herramienta ni sus argumentos en el chat.
+- Después de que la herramienta retorne, envía: "Perfecto {nombre} ✅ Voy a coordinar una llamada con uno de nuestros especialistas en {localidad} para que pueda orientarte y darte una valoración personalizada. Te contactaremos al {telefono} en las próximas horas."
 
 REGLA CRÍTICA: si el usuario te entrega varios datos en un mismo mensaje, NO los repitas en texto: invoca directamente save_lead con todos los campos disponibles (y pide solo los que falten).
 
@@ -161,6 +161,7 @@ export const Route = createFileRoute("/api/chat")({
             dentadura_postiza: z.string(),
             num_implantes: z.string(),
             presupuesto: z.string(),
+            localidad: z.string(),
             telefono: z.string(),
             email: z.string(),
           }),
@@ -205,9 +206,10 @@ export const Route = createFileRoute("/api/chat")({
                 input.dentadura_postiza,
                 input.num_implantes,
                 input.presupuesto,
+                input.localidad,
                 input.telefono,
                 input.email,
-                "landing-sofia",
+                "landing-sofia-valencia",
               ]);
               addLeadKeyToCache(targetKey);
               return { ok: true, message: "Lead guardado en CRM." };
