@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import LeadForm from "@/components/LeadForm";
 import TestimonialsSection from "@/components/TestimonialsSection";
-import logoComparador from "@/assets/logo-comparador.png.asset.json";
+import LogoHeader from "@/components/LogoHeader";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -29,12 +29,7 @@ function Index() {
       <header className="relative z-10 bg-[var(--brand-navy)] text-[var(--brand-navy-foreground)]">
         <div className="mx-auto flex max-w-6xl items-center justify-center px-6 py-6 sm:py-8">
           <a href="/" aria-label="Comparador de Implantes Dentales" className="inline-block">
-            <img
-              src={logoComparador.url}
-              alt="Comparador de Implantes Dentales"
-              className="h-16 w-auto sm:h-20"
-              loading="eager"
-            />
+            <LogoHeader className="h-16 w-auto sm:h-20" />
           </a>
         </div>
       </header>
