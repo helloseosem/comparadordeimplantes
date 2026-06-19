@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import LeadForm from "@/components/LeadForm";
 import TestimonialsSection from "@/components/TestimonialsSection";
-import logoComparador from "@/assets/logo-comparador.png.asset.json";
+import LogoHeader from "@/components/LogoHeader";
 
 export const Route = createFileRoute("/")({
   head: () => ({
